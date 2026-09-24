@@ -1,5 +1,5 @@
 /* =====================================================================
-   UC Bazaar — Site data & settings
+   UCBAZZAR — Site data & settings
    ---------------------------------------------------------------------
    Edit ONLY this file to customise the store.
    (Change your UPI ID, brand, prices and reviews below.)
@@ -7,7 +7,7 @@
 
 /* SETTINGS ------------------------------------------------------------- */
 const SITE_CONFIG = {
-  brand: "UC Bazaar",
+  brand: "UCBAZZAR",
 
   // Your UPI ID — payments are collected here
   upiId: "anmolmi7890-1@okaxis",
@@ -22,6 +22,10 @@ const SITE_CONFIG = {
   // An order stuck in "Processing" longer than this is shown as "Failed"
   // in the customer's recent-orders list
   orderFailAfterMinutes: 30,
+
+  // Recent orders older than this stop showing in "Your recent orders"
+  // (checked on page load and live while the page stays open)
+  orderHistoryHours: 1,
 
   /* One-tap UPI apps. Tapping a button opens that app on the customer's phone
      with the amount already filled in — they only enter their UPI PIN.
@@ -54,70 +58,6 @@ const PACKAGES = [
 ];
 
 /* CUSTOMER FEEDBACK ---------------------------------------------------- */
-/* A mix of English and Hinglish reviews.
-   NOTE: These are sample reviews — replace them with your real customer
-   feedback before going live.
-   Customers can also post their own review from the site; those are saved
-   on their own device only (localStorage) and never leave their phone. */
-const REVIEWS = [
-  {
-    name: "Aman Rajput", handle: "@aman_xd", city: "Jaipur", stars: 5,
-    text: "Ordered 1800 UC at 11 PM and it was in my account before I finished my noodles. Cheapest rate I have found so far — ordering again next season.",
-  },
-  {
-    name: "Rohit Sharma", handle: "@rohitbgmi", city: "Kanpur", stars: 5,
-    text: "Bhai sach me do minute me UC aa gaya 😳 UPI se payment kiya aur turant delivery mil gayi. Bilkul bharosemand hai.",
-  },
-  {
-    name: "Priya Nair", handle: "@priyaplays", city: "Kochi", stars: 5,
-    text: "I was worried about UC scams, but they only asked for my character ID — no login, no OTP. My 720 UC showed up within 5 minutes.",
-  },
-  {
-    name: "Vikram Singh", handle: "@vikram_op", city: "Delhi", stars: 5,
-    text: "Ordered UC for my whole squad as a surprise. Everyone had it in their account before the next match started. Legit store.",
-  },
-  {
-    name: "Nikhil Verma", handle: "@nikhilv", city: "Pune", stars: 4,
-    text: "Took around 8 minutes on a Sunday night because of peak load, but my order summary kept updating the whole time.",
-  },
-  {
-    name: "Sahil Khan", handle: "@khan_sahil", city: "Bhopal", stars: 5,
-    text: "8100 UC liya, game ke andar wale rate se bahut sasta pada. Delivery ekdum smooth thi. Dhanyawad 🙏",
-  },
-  {
-    name: "Farhan Ali", handle: "@farhan_clutch", city: "Hyderabad", stars: 5,
-    text: "Compared prices across four sites — this one was the cheapest. UPI payment was quick and the UC landed in about 3 minutes.",
-  },
-  {
-    name: "Ananya Das", handle: "@ananya.gg", city: "Kolkata", stars: 5,
-    text: "Meri ID me galti thi, unhone khud pakad kar bata di. Isi wajah se paisa safe laga. 720 UC mil gaya.",
-  },
-  {
-    name: "Meera Joshi", handle: "@meera_j", city: "Indore", stars: 5,
-    text: "The first-order offer was explained clearly and I got the bonus UC too. Really friendly store for new players.",
-  },
-  {
-    name: "Arjun Yadav", handle: "@arjun.yt", city: "Lucknow", stars: 5,
-    text: "They are busy all day yet replies are fast. My 1800 UC order was delivered the same morning I paid. Recommended.",
-  },
-  {
-    name: "Deepak Meena", handle: "@deepak.m", city: "Udaipur", stars: 5,
-    text: "Teen baar order kiya, teeno baar paanch minute ke andar UC. Koi scam nahi, ekdum genuine.",
-  },
-  {
-    name: "Simran Kaur", handle: "@simrankaur", city: "Chandigarh", stars: 4,
-    text: "My bank app failed the first UPI attempt and they simply asked me to retry instead of blaming me. Refund for the failed attempt came in 2 hours.",
-  },
-  {
-    name: "Ishita Roy", handle: "@ishita09", city: "Guwahati", stars: 5,
-    text: "The QR payment was simple enough that my cousin ordered for me, and I still got the UC below the in-game price. 10/10.",
-  },
-  {
-    name: "Ravi Menon", handle: "@ravi_menon", city: "Mumbai", stars: 5,
-    text: "Paid at midnight and the UC was credited before I could even open the game to check. Rates are lower than anywhere else I looked.",
-  },
-  {
-    name: "Karan Malhotra", handle: "@karan_m", city: "Surat", stars: 5,
-    text: "Raat ek baje bhi kuch hi minute me delivery ho gayi. Aisi service par paanch star to bante hain ⭐",
-  },
-];
+/* Reviews/feedback panel has been removed from the site by choice.
+   Do not add customer reviews to the page — keeping the store claim-free
+   is safer than showing feedback that cannot be verified. */

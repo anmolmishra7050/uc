@@ -98,7 +98,7 @@ def main():
     # onto the base, which turned the chip pills solid and hid their labels.)
     overlay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(overlay)
-    d.text((80, 150), "UC BAZAAR", font=font(True, 86), fill=WHITE)
+    d.text((80, 150), "UCBAZZAR", font=font(True, 86), fill=WHITE)
     d.text((80, 258), "BGMI UC Top-Up Store", font=font(True, 42), fill=AMBER)
     d.text((80, 322), "Buy UC online with UPI — delivered in 2–10 minutes.",
            font=font(False, 30), fill=MUTED)
@@ -108,7 +108,7 @@ def main():
     for label in ("720 UC – 8100 UC", "UPI Payments", "No ID Ban"):
         x += chip(d, (x, 430), label, f) + 16
 
-    d.text((80, 540), "ucbazzar.com", font=font(True, 28), fill=MUTED)
+    d.text((80, 540), "ucbazzar.in", font=font(True, 28), fill=MUTED)
     base.alpha_composite(overlay)
 
     OUT.parent.mkdir(parents=True, exist_ok=True)

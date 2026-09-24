@@ -1,4 +1,4 @@
-# 🚀 Go-live guide — ucbazzar.com
+# 🚀 Go-live guide — ucbazzar.in
 
 Everything you need to put this store on the internet, connect the GoDaddy domain and
 get it into Google search results. Follow the four parts in order.
@@ -40,12 +40,12 @@ Google Search Console — free.
 
 ---
 
-## Part 2 — Buy and connect ucbazzar.com (GoDaddy)
+## Part 2 — Buy and connect ucbazzar.in (GoDaddy)
 
-1. Buy the domain at <https://www.godaddy.com> → search `ucbazzar.com` → add to cart.
+1. Buy the domain at <https://www.godaddy.com> → search `ucbazzar.in` → add to cart.
    - Turn **ON** auto-renew, and keep **domain privacy / WHOIS protection** enabled
      (GoDaddy usually includes it free).
-2. Open **My Products → ucbazzar.com → DNS** (or "Manage DNS").
+2. Open **My Products → ucbazzar.in → DNS** (or "Manage DNS").
 3. **Delete GoDaddy's default records first** — they break GitHub Pages:
    - Any **A record with name `@`** that points to GoDaddy's parking/Website Builder IP
    - Any **CNAME with name `www`** pointing to `@` or `parkingpage`
@@ -61,7 +61,7 @@ Google Search Console — free.
 
    Optional IPv6 (AAA records, same name `@`):
    `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153`
-5. **Add the www record** (so `www.ucbazzar.com` also works):
+5. **Add the www record** (so `www.ucbazzar.in` also works):
 
    | Type | Name | Value |
    |---|---:|---|
@@ -74,14 +74,14 @@ Google Search Console — free.
 
 ### Tell GitHub about the domain
 
-7. Repo → **Settings → Pages → Custom domain** → type `ucbazzar.com` → **Save**.
+7. Repo → **Settings → Pages → Custom domain** → type `ucbazzar.in` → **Save**.
    - GitHub runs a DNS check; it can say "DNS check unsuccessful" while DNS is still
      propagating. Wait and press **Save** again, or use **Check again**.
    - Because this site deploys with a **GitHub Actions workflow**, GitHub does not read
      the `CNAME` file — the custom domain must be set in this Settings screen.
 8. Once the check passes, tick **Enforce HTTPS** (may take up to 24 hours to appear —
    GitHub needs to issue a free SSL certificate).
-9. Open `https://ucbazzar.com` and `https://www.ucbazzar.com` — one redirects to the
+9. Open `https://ucbazzar.in` and `https://www.ucbazzar.in` — one redirects to the
    other automatically. Both must show the padlock 🔒.
 
 **Rule of thumb:** if the site loads on `<username>.github.io` but not on your domain,
@@ -96,13 +96,13 @@ Google will not rank a site it has not indexed. This takes ~10 minutes and is th
 most important SEO step.
 
 1. Go to <https://search.google.com/search-console> → **Add property**.
-2. Choose **Domain** (not "URL prefix") and enter `ucbazzar.com`.
+2. Choose **Domain** (not "URL prefix") and enter `ucbazzar.in`.
    - Google gives you a **TXT record** like `google-site-verification=abc123...`
    - In GoDaddy DNS add: Type = **TXT**, Name = `@`, Value = that whole string, TTL 1 hour.
    - Back in Search Console click **Verify** (may take a few minutes).
 3. Submit your sitemap: left menu → **Sitemaps** → enter `sitemap.xml` → Submit.
-   (`https://ucbazzar.com/sitemap.xml` is already in the repo.)
-4. Force the first crawl: top search bar → paste `https://ucbazzar.com/` →
+   (`https://ucbazzar.in/sitemap.xml` is already in the repo.)
+4. Force the first crawl: top search bar → paste `https://ucbazzar.in/` →
    **Request indexing**. Do this once; do not spam it.
 5. Check back after 2–3 days — **Pages** report should show the URL as indexed.
 
@@ -126,7 +126,7 @@ brand-new domain will not outrank them for months. What you *can* win early:
   "bgmi elite pass uc price", "buy bgmi uc with upi". These convert better anyway,
   because the person is ready to buy.
 - **Brand searches** — once you share the link, people searching "ucbazzar" or
-  "UC Bazaar bgmi uc" must find you. That is already handled by the title tags.
+  "UCBAZZAR bgmi uc" must find you. That is already handled by the title tags.
 
 ### What actually moves the needle
 
@@ -148,12 +148,11 @@ brand-new domain will not outrank them for months. What you *can* win early:
 
 ### ⚠️ Before going public, fix these
 
-- **Replace the sample reviews and the fake numbers.** The site currently shows
-  "4.9★", "12,400+ Orders" and 15 sample reviews in `assets/js/data.js`. If those are
-  not real, they are misleading advertising (India's consumer-protection rules and
-  Google's policies both cover this), and Google can demote or penalise the site for it.
-  Put your real numbers in — even "New store · 30+ orders delivered" reads better than a
-  number nobody believes.
+- ~~Fake stats & sample reviews~~ — **done.** The "4.9★ / 12,400+ Orders" chip, the rating
+  breakdown card, the feedback form and all sample reviews have been removed — the whole
+  reviews/feedback panel is gone from the site. Do not add invented reviews — misleading
+  advertising is covered by India's consumer-protection rules and Google's policies, and
+  it is the fastest way to get the store reported or the site penalised.
 - ~~Demo checkout line~~ — **done.** The order form now reassures buyers instead
   ("You pay from your own UPI app — we never ask for your login, OTP or card details.").
 - ~~Trademark & artwork~~ — **done.** The copyrighted BGMI artwork has been removed and
@@ -178,10 +177,10 @@ brand-new domain will not outrank them for months. What you *can* win early:
 |---|---|
 | Site files | `index.html`, `assets/`, `robots.txt`, `sitemap.xml`, `CNAME`, `.nojekyll` |
 | Deploy trigger | Push to `main` (or manual run in the **Actions** tab) |
-| Prices / packages / reviews | `assets/js/data.js` |
+| Prices / packages | `assets/js/data.js` |
 | Failure window for orders | `orderFailAfterMinutes` in `assets/js/data.js` |
 | UPI ID / payee name | `upiId`, `upiName` in `assets/js/data.js` |
-| Live URL | `https://ucbazzar.com` |
+| Live URL | `https://ucbazzar.in` |
 | GitHub URL | `https://<your-username>.github.io/ucbazzar/` |
 
 When you edit any CSS or JS file, also bump the `?v=` number on that file's tag in

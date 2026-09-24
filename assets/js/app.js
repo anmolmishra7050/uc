@@ -1,5 +1,5 @@
 /* =====================================================================
-   UC Bazaar — app logic (vanilla JS, no framework)
+   UCBAZZAR — app logic (vanilla JS, no framework)
    Runs directly on GitHub Pages.
    ===================================================================== */
 
@@ -389,6 +389,11 @@ function displayStatus(o) {
 function renderRecentOrders() {
   let list = [];
   try { list = JSON.parse(localStorage.getItem("uc_orders") || "[]"); } catch { list = []; }
+  // keep only orders from the last N hours (config: orderHistoryHours) —
+  // older ones disappear from the customer's list entirely
+  const hours = Number(SITE_CONFIG.orderHistoryHours) || 1;
+  const cutoff = Date.now() - hours * 60 * 60 * 1000;
+  list = list.filter((o) => (o.ts || 0) >= cutoff);
   const box = $("#recentOrders");
   if (!list.length) { box.hidden = true; return; }
   box.hidden = false;
@@ -409,121 +414,6 @@ function renderRecentOrders() {
 }
 
 /* ---------------------------------------------------------------------
-   Reviews (marquee + footer strip)
-   ------------------------------------------------------------------- */
-function reviewCard(r) {
-  return `
-    <article class="review">
-      <header>
-        <span class="avatar">${r.name.charAt(0)}</span>
-        <div>
-          <b>${r.name}</b>
-          <span class="meta">${r.handle} • ${r.city}</span>
-        </div>
-      </header>
-      <div class="stars">${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)}</div>
-      <p>${r.text}</p>
-      <footer><span class="verified">✔ Verified Purchase</span></footer>
-    </article>`;
-}
-
-function renderMarquees() {
-  const fill = (el, list) => {
-    const html = list.map(reviewCard).join("");
-    el.innerHTML = html + html; // duplicated set = seamless loop
-  };
-  fill($("#marqueeA"), REVIEWS.slice(0, 7));
-  fill($("#marqueeB"), REVIEWS.slice(7));
-}
-
-function renderFooterFeedback() {
-  // three recent reviews
-  const picks = [REVIEWS[1], REVIEWS[4], REVIEWS[10]].filter(Boolean);
-  $("#footerFeedback").innerHTML = `
-    <div class="ff-head">
-      <span class="ff-title">💬 Customer Feedback — Recent</span>
-      <a href="#reviews" data-scroll class="ff-link">See all reviews →</a>
-    </div>
-    <div class="ff-grid">
-      ${picks.map((r) => `
-        <blockquote class="ff-item">
-          <div class="stars">${"★".repeat(r.stars)}</div>
-          <p>"${r.text}"</p>
-          <cite>— ${r.name}, ${r.city}</cite>
-        </blockquote>`).join("")}
-    </div>`;
-}
-
-/* ---------------------------------------------------------------------
-   Customer feedback — stored on this device only (localStorage)
-   ------------------------------------------------------------------- */
-const MY_REVIEWS_KEY = "uc_my_reviews";
-let myRating = 5;
-
-const esc = (s) => String(s).replace(/[&<>"']/g, (c) =>
-  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-
-function loadMyReviews() {
-  try { return JSON.parse(localStorage.getItem(MY_REVIEWS_KEY) || "[]"); }
-  catch { return []; }
-}
-
-function saveMyReviews(list) {
-  try { localStorage.setItem(MY_REVIEWS_KEY, JSON.stringify(list.slice(0, 10))); }
-  catch { /* storage full or disabled — feedback simply is not kept */ }
-}
-
-function renderMyReviews() {
-  const list = loadMyReviews();
-  const box = $("#myReviews");
-  if (!list.length) { box.hidden = true; $("#myReviewsList").innerHTML = ""; return; }
-  box.hidden = false;
-  $("#myReviewsList").innerHTML = list.map((r, i) => `
-    <div class="my-review">
-      <header>
-        <span class="avatar">${esc((r.name || "You").charAt(0)).toUpperCase()}</span>
-        <div>
-          <b>${esc(r.name || "You")}</b>
-          <span class="meta">Posted on ${new Date(r.ts).toLocaleDateString("en-IN")}</span>
-        </div>
-        <div class="stars">${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)}</div>
-        <button type="button" class="mini-btn del-btn" data-del="${i}" aria-label="Delete feedback">Delete</button>
-      </header>
-      <p>${esc(r.text)}</p>
-    </div>`).join("");
-}
-
-function setRating(stars) {
-  myRating = Math.min(5, Math.max(1, stars));
-  $$("#fbStars button").forEach((b) =>
-    b.classList.toggle("on", Number(b.dataset.star) <= myRating));
-}
-
-function postFeedback(e) {
-  e.preventDefault();
-  const name = $("#fbName").value.trim().slice(0, 24);
-  const text = $("#fbText").value.trim();
-
-  if (text.length < 10) {
-    toast("Please write at least 10 characters ✍️", "warn");
-    $("#fbText").focus();
-    return;
-  }
-
-  const list = loadMyReviews();
-  list.unshift({ name, stars: myRating, text: text.slice(0, 240), ts: Date.now() });
-  saveMyReviews(list);
-  renderMyReviews();
-
-  $("#fbText").value = "";
-  $("#fbName").value = "";
-  $("#fbCount").textContent = "0 / 240";
-  setRating(5);
-  toast("🎉 Thanks! Your feedback has been posted");
-  $("#myReviews").scrollIntoView({ behavior: "smooth", block: "center" });
-}
-
-/* ---------------------------------------------------------------------
    SEO: publish the pack catalog as structured data. Built from PACKAGES,
    so the prices Google reads always match the prices in data.js.
    ------------------------------------------------------------------- */
@@ -531,14 +421,14 @@ function injectCatalogSchema() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "OfferCatalog",
-    "@id": "https://ucbazzar.com/#catalog",
+    "@id": "https://ucbazzar.in/#catalog",
     "name": `${SITE_CONFIG.brand} BGMI UC packs`,
     "itemListElement": PACKAGES.map((p) => ({
       "@type": "Offer",
       "priceCurrency": "INR",
       "price": String(p.price),
       "availability": "https://schema.org/InStock",
-      "url": "https://ucbazzar.com/#packages",
+      "url": "https://ucbazzar.in/#packages",
       "itemOffered": {
         "@type": "Product",
         "name": `${p.title} — BGMI UC Top-Up`,
@@ -596,7 +486,7 @@ function initUi() {
       if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); }
     });
   }, { threshold: 0.12 });
-  $$(".section-head, .pkg, .card, .rating-bar").forEach((el) => {
+  $$(".section-head, .pkg, .card").forEach((el) => {
     el.classList.add("reveal");
     io.observe(el);
   });
@@ -649,26 +539,6 @@ function initUi() {
     if (card) { e.preventDefault(); selectPackage(card.dataset.id); }
   });
 
-  // feedback form
-  setRating(5);
-  $("#fbStars").addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-star]");
-    if (btn) setRating(Number(btn.dataset.star));
-  });
-  $("#fbText").addEventListener("input", (e) => {
-    $("#fbCount").textContent = `${e.target.value.length} / 240`;
-  });
-  $("#feedbackForm").addEventListener("submit", postFeedback);
-  $("#myReviewsList").addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-del]");
-    if (!btn) return;
-    const list = loadMyReviews();
-    list.splice(Number(btn.dataset.del), 1);
-    saveMyReviews(list);
-    renderMyReviews();
-    toast("Your feedback was removed");
-  });
-
   // order + payment confirmation (guarded — a stale cached page must not crash init)
   $("#orderForm")?.addEventListener("submit", handleSubmit);
   $("#confirmPaid")?.addEventListener("click", confirmPayment);
@@ -683,9 +553,6 @@ document.addEventListener("DOMContentLoaded", () => {
   fillPackageSelect();
   renderPackages();
   injectCatalogSchema();
-  renderMarquees();
-  renderFooterFeedback();
-  renderMyReviews();
   renderRecentOrders();
   updateSummary();
   showPanel("empty");
