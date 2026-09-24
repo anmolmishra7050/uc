@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+# Google can crawl everything on this store's single page.
+# Sitemap location — required so Google discovers the page.
+Sitemap: https://ucbazzar.com/sitemap.xml

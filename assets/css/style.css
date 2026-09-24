@@ -76,16 +76,14 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
   mask-image: radial-gradient(circle at 50% 20%, #000 0%, transparent 72%);
 }
 
-/* ---------------- BGMI marks ---------------- */
-.bgmi-mark {
+/* ---------------- store mark (original artwork, assets/mark.svg) ---------------- */
+.store-mark {
   display: block; border-radius: 24%; object-fit: cover; flex: 0 0 auto;
-  border: 2px solid rgba(255, 176, 32, .45);
   box-shadow: 0 0 20px rgba(255, 106, 0, .3);
-  background: #0b0e14;
 }
-.bgmi-mark.sm { width: 34px; height: 34px; }
-.bgmi-mark.md { width: 56px; height: 56px; }
-.bgmi-mark.lg { width: 58px; height: 58px; }
+.store-mark.sm { width: 34px; height: 34px; }
+.store-mark.md { width: 56px; height: 56px; }
+.store-mark.lg { width: 58px; height: 58px; }
 .section-mark { margin: 0 auto 16px; }
 
 /* ---------------- buttons ---------------- */
@@ -100,7 +98,10 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .btn-primary:hover { transform: translateY(-2px); filter: brightness(1.06); }
 .btn-ghost { background: rgba(255, 255, 255, .04); border-color: var(--line); color: var(--text); }
 .btn-ghost:hover { border-color: var(--brand); color: var(--brand); transform: translateY(-2px); }
-.btn-block { width: 100%; }
+/* block buttons must be allowed to wrap — long labels like
+   "I Have Paid — Confirm My Order" would otherwise force horizontal
+   overflow on narrow phones (the card could not shrink below the label) */
+.btn-block { width: 100%; white-space: normal; text-align: center; }
 
 .pill {
   display: inline-flex; align-items: center; gap: 8px; font-size: .8rem; font-weight: 600;
@@ -244,11 +245,11 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .pkg-sub { font-size: .76rem; color: var(--muted); }
 .pkg-price { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; margin-bottom: 14px; }
 .pkg-price .now { font-size: 1.7rem; font-weight: 800; font-family: var(--font-head); color: var(--text); }
-.pkg-price s { color: var(--muted); font-size: .95rem; }
-.pkg-price .off {
-  font-size: .72rem; font-weight: 700; color: var(--accent);
-  background: rgba(0, 224, 164, .1); border: 1px solid rgba(0, 224, 164, .3);
-  padding: 3px 9px; border-radius: 999px;
+.pkg-note {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 6px;
+  font-size: .76rem; font-weight: 700; color: var(--brand);
+  background: rgba(255, 176, 32, .1); border: 1px solid rgba(255, 176, 32, .3);
+  padding: 5px 11px; border-radius: 999px; margin-bottom: 14px;
 }
 .pkg-points { list-style: none; margin-bottom: 20px; display: grid; gap: 7px; }
 .pkg-points li { font-size: .84rem; color: var(--muted); padding-left: 20px; position: relative; }
@@ -349,7 +350,7 @@ select option { background: #0b0e14; }
 .pay-panel > .upi-id-box { order: 4; }
 .pay-panel > .pay-summary { order: 5; }
 .pay-panel > .pay-steps { order: 6; }
-.pay-panel > .utr-box { order: 7; }
+.pay-panel > .confirm-box { order: 7; }
 /* phone par: one-tap app buttons pehle, QR neeche */
 .pay-panel.is-mobile > .pay-now { order: 2; }
 .pay-panel.is-mobile > .qr-section { order: 3; }
@@ -372,7 +373,10 @@ select option { background: #0b0e14; }
   padding: 11px 10px; border-radius: 12px; transition: .22s;
   background: rgba(255, 255, 255, .04); border: 1px solid var(--line);
 }
-.upi-app::before { content: "📲"; font-size: .9rem; }
+.upi-app-logo {
+  width: 20px; height: 20px; border-radius: 6px; object-fit: cover;
+  flex-shrink: 0; background: #fff; padding: 2px; box-sizing: content-box;
+}
 .upi-app:hover { border-color: var(--brand); color: var(--brand); transform: translateY(-2px); }
 .qr-section { margin-bottom: 16px; }
 .timer { font-family: var(--font-head); font-size: 1.15rem; font-weight: 700; color: var(--brand); }
@@ -400,16 +404,13 @@ select option { background: #0b0e14; }
 .pay-steps { margin: 16px 0 0 18px; display: grid; gap: 7px; font-size: .84rem; color: var(--muted); }
 .pay-steps b { color: var(--brand); }
 
-/* UTR submission */
-.utr-box {
+/* payment confirmation */
+.confirm-box {
   margin-top: 20px; padding: 18px; border-radius: var(--radius-sm);
   background: rgba(255, 176, 32, .06); border: 1px solid rgba(255, 176, 32, .32);
 }
-.utr-box h4 {
-  font-family: var(--font-head); font-size: .95rem; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .8px; color: var(--brand); margin-bottom: 14px;
-}
-.utr-box .field { margin-bottom: 14px; }
+.confirm-box .hint { margin-bottom: 12px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; transform: none !important; }
 
 /* payment processing state */
 .processing { margin-top: 18px; border-top: 1px solid var(--line-soft); padding-top: 20px; animation: rise .45s ease; }
@@ -461,6 +462,10 @@ select option { background: #0b0e14; }
   text-transform: uppercase; letter-spacing: .5px; color: var(--brand);
   background: rgba(255, 176, 32, .1); border: 1px solid rgba(255, 176, 32, .3);
   padding: 2px 8px; border-radius: 999px;
+}
+.status-tag.failed {
+  color: var(--danger); background: rgba(255, 86, 86, .1);
+  border-color: rgba(255, 86, 86, .34);
 }
 
 /* ---------------- payment info ---------------- */
@@ -524,7 +529,7 @@ select option { background: #0b0e14; }
 .fb-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
 .fb-head h3 { font-size: 1.15rem; margin-bottom: 6px; }
 .fb-head p { font-size: .86rem; color: var(--muted); max-width: 52ch; }
-.fb-head .bgmi-mark { width: 38px; height: 38px; }
+.fb-head .store-mark { width: 38px; height: 38px; }
 .fb-row { display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 12px; }
 .fb-row input { max-width: 320px; }
 .fb-stars { display: flex; gap: 4px; }

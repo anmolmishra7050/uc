@@ -12,14 +12,16 @@ const SITE_CONFIG = {
   // Your UPI ID — payments are collected here
   upiId: "anmolmi7890-1@okaxis",
 
-  // Payee name shown inside the customer's UPI app
-  upiName: "UC Bazaar",
+  // Payee name shown inside the customer's UPI app — keep this EXACTLY
+  // equal to your bank-registered UPI name so customers trust the screen
+  upiName: "Anmol Mishra",
 
   // How long the generated payment link stays open
   paymentWindowMinutes: 15,
 
-  // How many digits a UPI UTR / transaction ID has (usually 12)
-  utrLength: 12,
+  // An order stuck in "Processing" longer than this is shown as "Failed"
+  // in the customer's recent-orders list
+  orderFailAfterMinutes: 30,
 
   /* One-tap UPI apps. Tapping a button opens that app on the customer's phone
      with the amount already filled in — they only enter their UPI PIN.
@@ -28,25 +30,27 @@ const SITE_CONFIG = {
      chooser, which works everywhere. Delete any app you do not want. */
   upiLinkScheme: "upi://pay",
   upiApps: [
-    { name: "Google Pay", scheme: "tez://upi/pay" },
-    { name: "PhonePe", scheme: "phonepe://pay" },
-    { name: "Paytm", scheme: "paytmmp://pay" },
-    { name: "BHIM", scheme: "bhim://pay" },
+    { name: "Google Pay", scheme: "tez://upi/pay", logo: "assets/Google-pay.jpeg" },
+    { name: "PhonePe", scheme: "phonepe://pay", logo: "assets/phonepe.png" },
+    { name: "Paytm", scheme: "paytmmp://pay", logo: "assets/paytm.png" },
+    { name: "BHIM", scheme: "bhim://pay", logo: "assets/upi.png" },
   ],
 };
 
 /* UC PACKAGES ---------------------------------------------------------- */
 /* uc:    UC amount shown in the summary
-   price: what the customer pays
-   mrp:   struck-through price (for the discount badge)
-   tag:   optional ribbon on the card — leave "" for no ribbon      */
+   price: what the customer pays (this is the only price shown — no MRP,
+          no discount badges)
+   tag:   optional ribbon on the card — leave "" for no ribbon
+   note:  optional highlighted line inside the card (e.g. "Elite Pass Special") */
 const PACKAGES = [
-  { id: "uc60",   uc: 60,   price: 79,   mrp: 99,   title: "60 UC",   tag: "Starter" },
-  { id: "uc325",  uc: 325,  price: 375,  mrp: 440,  title: "325 UC",  tag: "" },
-  { id: "uc660",  uc: 660,  price: 749,  mrp: 880,  title: "660 UC",  tag: "Popular" },
-  { id: "uc1800", uc: 1800, price: 1875, mrp: 2199, title: "1800 UC", tag: "Best Value" },
-  { id: "uc3850", uc: 3850, price: 3699, mrp: 4399, title: "3850 UC", tag: "" },
-  { id: "uc8100", uc: 8100, price: 7299, mrp: 8799, title: "8100 UC", tag: "PRO" },
+  { id: "uc720",  uc: 720,  price: 199,  title: "720 UC",  tag: "Elite Pass Special",
+    note: "🎫 The exact pick for the BGMI Elite Pass" },
+  { id: "uc1800", uc: 1800, price: 399,  title: "1800 UC", tag: "" },
+  { id: "uc2560", uc: 2560, price: 549,  title: "2560 UC", tag: "Popular" },
+  { id: "uc3200", uc: 3200, price: 699,  title: "3200 UC", tag: "Best Value" },
+  { id: "uc3850", uc: 3850, price: 749,  title: "3850 UC", tag: "" },
+  { id: "uc8100", uc: 8100, price: 1299, title: "8100 UC", tag: "PRO" },
 ];
 
 /* CUSTOMER FEEDBACK ---------------------------------------------------- */
@@ -58,15 +62,15 @@ const PACKAGES = [
 const REVIEWS = [
   {
     name: "Aman Rajput", handle: "@aman_xd", city: "Jaipur", stars: 5,
-    text: "Ordered 660 UC at 11 PM and it was in my account before I finished my noodles. Cheapest rate I have found so far — ordering again next season.",
+    text: "Ordered 1800 UC at 11 PM and it was in my account before I finished my noodles. Cheapest rate I have found so far — ordering again next season.",
   },
   {
     name: "Rohit Sharma", handle: "@rohitbgmi", city: "Kanpur", stars: 5,
-    text: "Bhai sach me do minute me UC aa gaya 😳 UPI se payment kiya, UTR daala aur turant delivery mil gayi. Bilkul bharosemand hai.",
+    text: "Bhai sach me do minute me UC aa gaya 😳 UPI se payment kiya aur turant delivery mil gayi. Bilkul bharosemand hai.",
   },
   {
     name: "Priya Nair", handle: "@priyaplays", city: "Kochi", stars: 5,
-    text: "I was worried about UC scams, but they only asked for my character ID — no login, no OTP. My 325 UC showed up within 5 minutes.",
+    text: "I was worried about UC scams, but they only asked for my character ID — no login, no OTP. My 720 UC showed up within 5 minutes.",
   },
   {
     name: "Vikram Singh", handle: "@vikram_op", city: "Delhi", stars: 5,
@@ -78,7 +82,7 @@ const REVIEWS = [
   },
   {
     name: "Sahil Khan", handle: "@khan_sahil", city: "Bhopal", stars: 5,
-    text: "8100 UC liya, game ke andar wale rate se bahut sasta pada. Delivery ka screenshot bhi bhej diya. Dhanyawad 🙏",
+    text: "8100 UC liya, game ke andar wale rate se bahut sasta pada. Delivery ekdum smooth thi. Dhanyawad 🙏",
   },
   {
     name: "Farhan Ali", handle: "@farhan_clutch", city: "Hyderabad", stars: 5,
@@ -86,7 +90,7 @@ const REVIEWS = [
   },
   {
     name: "Ananya Das", handle: "@ananya.gg", city: "Kolkata", stars: 5,
-    text: "Meri ID me galti thi, unhone khud pakad kar bata di. Isi wajah se paisa safe laga. 325 UC mil gaya.",
+    text: "Meri ID me galti thi, unhone khud pakad kar bata di. Isi wajah se paisa safe laga. 720 UC mil gaya.",
   },
   {
     name: "Meera Joshi", handle: "@meera_j", city: "Indore", stars: 5,

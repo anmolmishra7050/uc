@@ -3,7 +3,11 @@
 A **frontend-only** (plain HTML + CSS + JavaScript) BGMI UC storefront.
 No framework, no build step, no paid hosting — it deploys straight to **GitHub Pages, for free.**
 
-Dark theme • UPI payments with QR + UTR verification • English copy • Customer feedback • Mobile friendly
+Dark theme • UPI payments with QR + one-tap app links • English copy • Customer feedback • Mobile friendly
+
+> 🌐 **Going live on your own domain?** See **[GO-LIVE.md](GO-LIVE.md)** for the full
+> walkthrough: GitHub Pages hosting → GoDaddy DNS for `ucbazzar.com` → GitHub custom domain
+> + HTTPS → Google Search Console → SEO plan and the risks to fix first.
 
 ---
 
@@ -53,8 +57,8 @@ https://<YOUR-USERNAME>.github.io/<REPO>/
 ```
 
 That URL is your live store — share it anywhere.
-**No hosting, domain or server purchase needed.** (You can attach a custom domain later under
-Settings → Pages → Custom domain.)
+**No hosting, domain or server purchase needed.** To put it on `ucbazzar.com`, follow
+**[GO-LIVE.md](GO-LIVE.md)** (GoDaddy DNS records, custom domain, HTTPS, Google indexing).
 
 Every path in this project is **relative** (`assets/css/style.css`, not `/assets/...`), so the site
 works both at `username.github.io` and at `username.github.io/repo-name/` without any changes.
@@ -75,25 +79,26 @@ const SITE_CONFIG = {
   upiName: "UC Bazaar",           // 👈 payee name shown in the UPI app
 
   paymentWindowMinutes: 15,       // payment link validity
-  utrLength: 12,                  // digits shown as a hint for the UTR field
 
   // One-tap UPI apps — tapping a button opens that app on the customer's phone
   // with the amount already filled in. They only enter their UPI PIN.
   upiLinkScheme: "upi://pay",     // opens the phone's app chooser (works everywhere)
   upiApps: [
-    { name: "Google Pay", scheme: "tez://upi/pay" },
-    { name: "PhonePe", scheme: "phonepe://pay" },
-    { name: "Paytm", scheme: "paytmmp://pay" },
-    { name: "BHIM", scheme: "bhim://pay" },
+    { name: "Google Pay", scheme: "tez://upi/pay", logo: "assets/Google-pay.jpeg" },
+    { name: "PhonePe", scheme: "phonepe://pay", logo: "assets/phonepe.png" },
+    { name: "Paytm", scheme: "paytmmp://pay", logo: "assets/paytm.png" },
+    { name: "BHIM", scheme: "bhim://pay", logo: "assets/upi.png" },
   ],
 };
 ```
 
 The same file holds:
 
-- **`PACKAGES`** — UC packs only. Change `price` (what the customer pays), `mrp`
-  (struck-through rate), `uc` (UC amount) and `tag` (ribbon text; leave `""` for no ribbon).
-  Add or remove packs freely — the cards, the order dropdown and the summary all update.
+- **`PACKAGES`** — UC packs only. Change `price` (what the customer pays — the only price
+  shown on the site), `uc` (UC amount), `tag` (ribbon text; leave `""` for no ribbon) and
+  `note` (optional highlighted line inside the card, e.g. `"🎫 The exact pick for the BGMI
+  Elite Pass"`). Add or remove packs freely — the cards, the order dropdown and the summary
+  all update. There is no MRP / discount badge anywhere, by design.
 - **`REVIEWS`** — customer feedback shown in the marquee and the footer strip. Entries are a
   mix of English and Hinglish; add as many as you like in the same shape
   (`name`, `handle`, `city`, `stars`, `text`).
@@ -103,7 +108,13 @@ Save the file → commit on GitHub → the site updates automatically.
 
 ---
 
-## 🧾 How the order flow works (UTR based)
+## 🧾 How the order flow works
+
+1. The customer picks a UC package and enters their BGMI character ID.
+2. A payment panel opens with a QR code, a copyable UPI ID and one-tap buttons for Google Pay / PhonePe / Paytm / BHIM — the amount is pre-filled, the customer only enters their UPI PIN.
+3. After paying, the customer taps **I Have Paid — Confirm My Order** and lands on the "Payment Processing" state (Order ID, package, BGMI ID, amount and a delivery timeline).
+
+You (the store owner) then verify the payment manually against the Order ID / amount in your own UPI app's transaction history and deliver the UC. Nothing is auto-verified and no proof is collected on the site.
 
 1. Customer picks a package and enters their **BGMI character ID** (9–12 digits) plus an
    optional in-game name. No phone number, no login, no OTP.
@@ -114,15 +125,16 @@ Save the file → commit on GitHub → the site updates automatically.
    filled in** — the customer only enters their UPI PIN. A 15-minute countdown runs.
    On phones the app buttons are shown first and the QR below; on desktop the QR comes first.
    No payment gateway, no API key and no backend are involved.
-3. The customer pays, copies the **UTR / transaction ID** from their UPI app and submits it.
-4. The order switches to a **Payment Processing** state: an animated verification timeline,
-   full order summary (Order ID, UTR, package, BGMI ID, amount) and a confirmation message
-   that delivery happens within 2–10 minutes.
-5. Submitted orders are remembered on that device under **"Recent orders on this device"**
-   (localStorage, last 5) so the customer can look their Order ID up later.
+3. The customer pays, then taps **I Have Paid — Confirm My Order**.
+4. The order switches to a **Payment Processing** state: a delivery timeline and a full order
+   summary (Order ID, package, BGMI ID, amount).
+5. Confirmed orders are remembered on that device under **"Your recent orders"**
+   (localStorage, last 5) so the customer can look their Order ID up later. An order that
+   stays in "Processing" for more than `orderFailAfterMinutes` (default **30** in
+   `data.js`) flips to **Failed** automatically, so nobody keeps waiting on a dead order.
 
-There is no "send us a screenshot" step and no chat/social links on the site — the UTR is the
-only payment reference, and you verify it in your own UPI app.
+There is no UTR field, no screenshot upload and no chat/social links on the site — **you**
+verify each payment manually in your own UPI app against the Order ID / amount, then deliver.
 
 ---
 
@@ -131,14 +143,16 @@ only payment reference, and you verify it in your own UPI app.
 | Feature | Detail |
 |---|---|
 | Dark theme | Neon amber/orange look, glassy cards, glow + grid background, centered hero |
-| UC packages | 6 UC packs (60 UC → 8100 UC) in a balanced 3-column grid, discount % auto-calculated |
+| UC packages | 6 UC packs (720 UC → 8100 UC) in a balanced 3-column grid, one flat price per pack |
 | Order form | Character ID validation, optional in-game name, package dropdown, terms checkbox |
 | UPI payment | Live QR code, copy UPI ID, one-tap app buttons (intent deep links), payment countdown timer |
-| UTR flow | UTR validation, "Payment Processing" state, status timeline, copy Order ID |
+| Payment confirm | One-tap "I Have Paid" confirmation, "Payment Processing" state, status timeline, copy Order ID |
 | Order history | Recent orders stored on the device (localStorage) |
 | Customer feedback | Scrolling review marquee, footer feedback strip, 4.9★ rating breakdown |
 | Visitor feedback form | Customers can post their own review (name, star rating, text) with a Delete option. Stored in **their** browser's localStorage only — nothing is uploaded anywhere, and the UI just shows a normal "Your feedback" list (no privacy wording) |
-| BGMI artwork | `assets/bgmi.jpeg` is used in the hero badge, the two section marks and the feedback card mark, so visitors instantly see it is a BGMI UC store. The brand logo and favicon stay the original "U" coin |
+| Store mark | `assets/mark.svg` (original UC-coin artwork drawn in-house) is used in the hero badge, the two section marks and the feedback card mark. No third-party game art is bundled. The brand logo and favicon stay the original "U" coin |
+| Social cover | `assets/og-cover.png` (1200×630, generated by `tools/make-og-cover.py`) is the preview image for WhatsApp / Instagram / Google link shares |
+| SEO files | `robots.txt`, `sitemap.xml`, canonical URL, Open Graph + Twitter tags and JSON-LD structured data (store, website and the live pack catalog) |
 | Extras | Sticky header, mobile nav, toasts, smooth scroll, scroll reveal animations |
 | Responsive | Verified on mobile, tablet and desktop |
 
@@ -150,11 +164,17 @@ only payment reference, and you verify it in your own UPI app.
 .
 ├── index.html                     # the whole site (single page)
 ├── assets/
-│   ├── bgmi.jpeg                  # BGMI logo/artwork (header, hero, sections, favicon)
+│   ├── mark.svg                   # original store mark (hero badge + section marks)
+│   ├── og-cover.png               # 1200×630 social share cover
+│   ├── Google-pay.jpeg            # UPI app logos for the one-tap buttons
+│   ├── phonepe.png  paytm.png  upi.png
 │   ├── css/style.css              # dark theme styling
 │   └── js/
 │       ├── data.js                # ⚙️ SETTINGS + packages + reviews
-│       └── app.js                 # order flow, UPI QR, UTR validation, rendering
+│       └── app.js                 # order flow, UPI QR, payment confirmation, rendering
+├── tools/make-og-cover.py         # regenerates assets/og-cover.png (needs Pillow)
+├── robots.txt  sitemap.xml  CNAME # SEO + custom domain
+├── GO-LIVE.md                     # hosting + domain + Google guide
 ├── .github/workflows/deploy.yml   # GitHub "Static HTML" Pages workflow (auto-deploy on push)
 ├── .nojekyll                      # disables Jekyll processing (needed for branch deploys)
 └── README.md
@@ -179,19 +199,23 @@ GitHub Pages serves over HTTPS, so they work on the live site.
 ## ⚠️ Important notes
 
 - This is a **frontend-only** site: orders are not stored on a server and payments are not
-  verified automatically. A customer pays over UPI, submits the UTR, and **you verify the UTR
-  in your UPI app and deliver manually**.
+  verified automatically. A customer pays over UPI, taps "I Have Paid", and **you verify the
+  payment in your UPI app (match amount + Order ID note) and deliver manually**.
 - The one-tap app buttons are plain UPI intent links, so they depend on the customer's phone:
   each app-specific scheme (`tez://`, `phonepe://`, `paytmmp://`, `bhim://`) only opens if that
   app is installed. The generic `upi://pay` button always works because it opens the phone's
   app chooser — keep it as the primary option, exactly as it is now.
-- Automatic payment verification (instantly marking an order paid without a UTR) needs a payment
-  gateway such as Razorpay/Cashfree plus a server, which does require paid hosting. As long as you
-  stay on GitHub Pages, the UTR step is what confirms a payment.
-- Only UTRs matching a real credit in your UPI account should be processed. Always keep your
+- Automatic payment verification (instantly confirming an order as paid) needs a payment
+  gateway such as Razorpay/Cashfree plus a server, which does require paid hosting. On GitHub
+  Pages, the "I Have Paid" button plus your manual check is the confirmation step.
+- Only process orders whose amount matches a real credit in your UPI account. Always keep your
   UPI app statement as the source of truth.
 - Replace the placeholder UPI ID, brand name, prices and sample reviews before sharing the
   link publicly.
+- The site promises **"No carding UC — no ID ban"** (hero chip, ticker and the "Why It Is
+  Safe" card). That is a claim you are making to customers, so only source UC from a
+  legitimate channel — if a buyer's ID ever gets banned, this promise is what they will
+  point at.
 - The site intentionally has **no support, chat or social links** (no WhatsApp, Telegram,
   YouTube or Instagram anywhere) — buyers only interact through the order form.
 - **BGMI / Krafton are trademarks of their respective owners.** The site carries a clear

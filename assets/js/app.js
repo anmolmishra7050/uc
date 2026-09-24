@@ -7,8 +7,7 @@ const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
 const money = (n) => "₹" + Number(n).toLocaleString("en-IN");
-const pctOff = (price, mrp) => Math.round((1 - price / mrp) * 100);
-/* "660 UC — 660 UC" jaisa repeat na ho, isliye UC count sirf tab jodte hain
+/* "720 UC — 720 UC" jaisa repeat na ho, isliye UC count sirf tab jodte hain
    jab pack ke naam me number pehle se na ho (e.g. "Starter Pack") */
 const packLabel = (p) => String(p.title).includes(String(p.uc))
   ? p.title
@@ -51,19 +50,29 @@ async function copyText(text, label = "Copied") {
   }
 }
 
-/* Clean text for UPI params (special characters break the link) */
+/* Keep only characters that are safe inside a UPI param value */
 const upiSafe = (s) => String(s).replace(/[^a-zA-Z0-9 .\-_@]/g, "").slice(0, 50).trim();
 
-/* UPI intent deep link — aapke phone ka UPI app khulta hai, amount already
-   bhara hota hai aur customer sirf UPI PIN daalta hai. Koi gateway nahi. */
+/* UPI apps are strict URL parsers — most do NOT decode %40 back to '@'
+   or '+' back to a space. So build the query string by hand: keep the VPA
+   exactly as 'name@bank' and encode spaces as %20. Only escape the few
+   characters that would break the URI itself. */
+const upiParam = (v) => String(v)
+  .replace(/&/g, "%26")
+  .replace(/\?/g, "%3F")
+  .replace(/=/g, "%3D")
+  .replace(/#/g, "%23")
+  .replace(/\+/g, "%2B")
+  .replace(/ /g, "%20");
+
 function upiQuery({ amount, note }) {
-  return new URLSearchParams({
-    pa: SITE_CONFIG.upiId,
-    pn: upiSafe(SITE_CONFIG.upiName),
-    am: Number(amount).toFixed(2),
-    cu: "INR",
-    tn: upiSafe(note),
-  }).toString();
+  return [
+    "pa=" + upiParam(SITE_CONFIG.upiId),
+    "pn=" + upiParam(upiSafe(SITE_CONFIG.upiName)),
+    "am=" + Number(amount).toFixed(2),
+    "cu=INR",
+    "tn=" + upiParam(upiSafe(note)),
+  ].join("&");
 }
 
 function buildUpiLink({ amount, note, scheme }) {
@@ -86,7 +95,6 @@ function qrUrl(data, size = 260) {
 let selected = null;
 
 function packageCard(p) {
-  const off = pctOff(p.price, p.mrp);
   return `
     <article class="pkg${selected && selected.id === p.id ? " is-selected" : ""}"
              data-id="${p.id}" tabindex="0" role="button"
@@ -101,13 +109,13 @@ function packageCard(p) {
       </div>
       <div class="pkg-price">
         <span class="now">${money(p.price)}</span>
-        <s>${money(p.mrp)}</s>
-        ${off > 0 ? `<span class="off">${off}% OFF</span>` : ""}
       </div>
+      ${p.note ? `<p class="pkg-note">${p.note}</p>` : ""}
       <ul class="pkg-points">
         <li>Character ID top-up only</li>
         <li>2–10 minute delivery</li>
         <li>Order ID &amp; receipt</li>
+        <li>No carding UC — no ID ban</li>
       </ul>
       <button type="button" class="btn btn-primary btn-block" data-select="${p.id}">
         ${selected && selected.id === p.id ? "✓ Selected" : "Select Package"}
@@ -140,8 +148,6 @@ function updateSummary() {
   const p = selected;
   $("#sumPackage").textContent = p ? p.title : "—";
   $("#sumUc").textContent = p ? p.uc.toLocaleString("en-IN") + " UC" : "—";
-  $("#sumMrp").textContent = p ? money(p.mrp) : "—";
-  $("#sumDiscount").textContent = p ? "-" + money(p.mrp - p.price) : "—";
   $("#sumTotal").textContent = money(p ? p.price : 0);
   const btn = $("#submitBtn");
   if (btn) btn.innerHTML = p
@@ -204,7 +210,9 @@ function renderUpiApps(payload) {
   const apps = SITE_CONFIG.upiApps || [];
   box.innerHTML = apps.map((a) => `
     <a class="upi-app" href="${buildUpiLink({ ...payload, scheme: a.scheme })}"
-       data-app="${a.name}">${a.name}</a>`).join("");
+       data-app="${a.name}">${a.logo
+         ? `<img class="upi-app-logo" src="${a.logo}" alt="${a.name} logo" width="20" height="20">`
+         : "📲"}${a.name}</a>`).join("");
 }
 
 function openPaymentPanel({ orderId, pkg, gameId, ingameName }) {
@@ -239,12 +247,7 @@ function openPaymentPanel({ orderId, pkg, gameId, ingameName }) {
   $("#payAmount").textContent = money(amount);
   $("#payStepsAmount").textContent = money(amount);
 
-  // reset UTR state
-  $("#utrInput").value = "";
-  $("#utrHint").textContent =
-    "Found in your UPI app under payment history → this transaction → UTR / Ref no.";
-  $("#utrInput").closest(".field").classList.remove("has-error");
-
+  // reset panel state (timer restarts, form state stays clean)
   showPanel("pay");
   startTimer(SITE_CONFIG.paymentWindowMinutes);
   $("#payPanel").scrollIntoView({ behavior: "smooth", block: "center" });
@@ -301,7 +304,6 @@ function handleSubmit(e) {
     amount: selected.price,
     gameId,
     ingameName,
-    utr: "",
     status: "Awaiting payment",
     ts: Date.now(),
   };
@@ -315,29 +317,13 @@ function handleSubmit(e) {
 }
 
 /* ---------------------------------------------------------------------
-   UTR submission -> payment processing
+   "I Have Paid" -> payment processing (no proof needed — the store owner
+   verifies payments manually against the Order ID in their UPI app)
    ------------------------------------------------------------------- */
-function submitUtr() {
+function confirmPayment() {
   if (!currentOrder) return;
-  const input = $("#utrInput");
-  const utr = input.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
-  const field = input.closest(".field");
-  const errBox = $(".err", field);
-
-  if (utr.length < 10 || utr.length > 22) {
-    field.classList.add("has-error");
-    if (errBox) errBox.textContent = "Enter the UTR / transaction ID from your UPI app (10–22 characters).";
-    else fieldError(input, "Enter the UTR / transaction ID from your UPI app (10–22 characters).");
-    input.focus();
-    toast("UTR looks incomplete — please check your UPI app", "warn");
-    return;
-  }
-
-  field.classList.remove("has-error");
-  if (errBox) errBox.remove();
-
-  currentOrder.utr = utr;
   currentOrder.status = "Processing";
+  currentOrder.processingAt = Date.now();
   clearInterval(countdown);
   saveOrder(currentOrder);
   showProcessing(currentOrder);
@@ -345,23 +331,21 @@ function submitUtr() {
 
 function showProcessing(order) {
   $("#procOrderId").textContent = order.orderId;
-  $("#procUtr").textContent = order.utr;
   $("#procPackage").textContent = packLabel(order.pkg);
   $("#procGameId").textContent = order.gameId + (order.ingameName ? ` (${order.ingameName})` : "");
   $("#procPaid").textContent = money(order.amount);
   $("#procAmount").textContent =
-    `Verifying ${money(order.amount)} against UTR ${order.utr}.`;
+    `We are verifying your payment of ${money(order.amount)} now — your UC will be delivered within 2–10 minutes.`;
 
   showPanel("processing");
   renderRecentOrders();
   $("#processing").scrollIntoView({ behavior: "smooth", block: "center" });
-  toast("🎉 UTR submitted — your order is being processed");
+  toast("⏳ Payment Verifying — Thank You");
 }
 
 function resetOrder() {
   clearInterval(countdown);
   currentOrder = null;
-  $("#utrInput").value = "";
   $("#agree").checked = false;
   $("#orderForm").reset();
   selected = null;
@@ -382,14 +366,24 @@ function saveOrder(order) {
   list = list.filter((o) => o.orderId !== order.orderId);
   list.unshift({
     orderId: order.orderId,
-    utr: order.utr,
     title: order.pkg.title,
     amount: order.amount,
     gameId: order.gameId,
     status: order.status,
+    processingAt: order.processingAt || 0,
     ts: order.ts,
   });
   localStorage.setItem("uc_orders", JSON.stringify(list.slice(0, 5)));
+}
+
+/* An order that has been "Processing" for too long stops looking active —
+   it is shown as "Failed" so the customer is not left waiting forever. */
+function displayStatus(o) {
+  if (o.status !== "Processing") return o.status;
+  const minutes = Number(SITE_CONFIG.orderFailAfterMinutes) || 30;
+  const since = o.processingAt || o.ts || 0;
+  if (!since) return o.status;
+  return Date.now() - since >= minutes * 60 * 1000 ? "Failed" : o.status;
 }
 
 function renderRecentOrders() {
@@ -398,17 +392,20 @@ function renderRecentOrders() {
   const box = $("#recentOrders");
   if (!list.length) { box.hidden = true; return; }
   box.hidden = false;
-  $("#recentOrdersList").innerHTML = list.map((o) => `
+  $("#recentOrdersList").innerHTML = list.map((o) => {
+    const status = displayStatus(o);
+    return `
     <div class="recent-row">
       <div>
         <b>${o.orderId}</b>
-        <span class="meta">${o.title} • ${o.gameId} • UTR ${o.utr || "—"}</span>
+        <span class="meta">${o.title} • ${o.gameId}</span>
       </div>
       <div class="recent-right">
         <b>${money(o.amount)}</b>
-        <span class="status-tag">${o.status}</span>
+        <span class="status-tag${status === "Failed" ? " failed" : ""}">${status}</span>
       </div>
-    </div>`).join("");
+    </div>`;
+  }).join("");
 }
 
 /* ---------------------------------------------------------------------
@@ -527,14 +524,43 @@ function postFeedback(e) {
 }
 
 /* ---------------------------------------------------------------------
+   SEO: publish the pack catalog as structured data. Built from PACKAGES,
+   so the prices Google reads always match the prices in data.js.
+   ------------------------------------------------------------------- */
+function injectCatalogSchema() {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "OfferCatalog",
+    "@id": "https://ucbazzar.com/#catalog",
+    "name": `${SITE_CONFIG.brand} BGMI UC packs`,
+    "itemListElement": PACKAGES.map((p) => ({
+      "@type": "Offer",
+      "priceCurrency": "INR",
+      "price": String(p.price),
+      "availability": "https://schema.org/InStock",
+      "url": "https://ucbazzar.com/#packages",
+      "itemOffered": {
+        "@type": "Product",
+        "name": `${p.title} — BGMI UC Top-Up`,
+        "description": `${p.uc} UC delivered to your BGMI character ID. Pay by UPI, delivery in 2–10 minutes.`,
+        "category": "In-game currency",
+        "brand": { "@type": "Brand", "name": SITE_CONFIG.brand },
+      },
+    })),
+  };
+  const el = document.createElement("script");
+  el.type = "application/ld+json";
+  el.textContent = JSON.stringify(schema);
+  document.head.appendChild(el);
+}
+
+/* ---------------------------------------------------------------------
    UI wiring
    ------------------------------------------------------------------- */
 function initUi() {
   // page title, year + store details
-  document.title = `${SITE_CONFIG.brand} — BGMI UC Top-Up (Instant Delivery)`;
+  document.title = `Buy BGMI UC Online — Instant UC Top-Up at Lowest Price | ${SITE_CONFIG.brand}`;
   $("#year").textContent = new Date().getFullYear();
-  $("#officialUpi").textContent = SITE_CONFIG.upiId;
-  $("#officialName").textContent = SITE_CONFIG.upiName;
 
   // smooth scroll for [data-scroll]
   document.addEventListener("click", (e) => {
@@ -577,7 +603,6 @@ function initUi() {
 
   // copy buttons
   $("#copyUpi").addEventListener("click", () => copyText(SITE_CONFIG.upiId, "UPI ID copied"));
-  $("#copyOfficialUpi").addEventListener("click", () => copyText(SITE_CONFIG.upiId, "UPI ID copied"));
   $("#copyOrderId").addEventListener("click", () =>
     copyText(currentOrder ? currentOrder.orderId : "—", "Order ID copied"));
 
@@ -597,7 +622,6 @@ function initUi() {
     }
   };
   $("#pasteBtn").addEventListener("click", () => pasteInto($("#gameId"), true, "Character ID"));
-  $("#pasteUtr").addEventListener("click", () => pasteInto($("#utrInput"), false, "UTR"));
 
   // input formatting
   $("#gameId").addEventListener("input", (e) => {
@@ -606,9 +630,6 @@ function initUi() {
     $("#gameIdHint").textContent = len
       ? `${len} digits entered ${len >= 9 ? "✅" : "(at least 9 required)"}`
       : "A 9–12 digit number. You can find it under your name on the profile screen.";
-  });
-  $("#utrInput").addEventListener("input", (e) => {
-    e.target.value = e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 22);
   });
 
   // payment method styling
@@ -648,13 +669,10 @@ function initUi() {
     toast("Your feedback was removed");
   });
 
-  // order + UTR actions
-  $("#orderForm").addEventListener("submit", handleSubmit);
-  $("#submitUtr").addEventListener("click", submitUtr);
-  $("#utrInput").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") { e.preventDefault(); submitUtr(); }
-  });
-  $("#newOrder").addEventListener("click", resetOrder);
+  // order + payment confirmation (guarded — a stale cached page must not crash init)
+  $("#orderForm")?.addEventListener("submit", handleSubmit);
+  $("#confirmPaid")?.addEventListener("click", confirmPayment);
+  $("#newOrder")?.addEventListener("click", resetOrder);
 }
 
 /* ---------------------------------------------------------------------
@@ -664,10 +682,15 @@ document.addEventListener("DOMContentLoaded", () => {
   initUi();
   fillPackageSelect();
   renderPackages();
+  injectCatalogSchema();
   renderMarquees();
   renderFooterFeedback();
   renderMyReviews();
   renderRecentOrders();
   updateSummary();
   showPanel("empty");
+
+  // keep the recent-orders list honest while the page stays open:
+  // a Processing order flips to Failed once the window passes
+  setInterval(renderRecentOrders, 30000);
 });
