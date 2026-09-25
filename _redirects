@@ -1,0 +1,14 @@
+# =====================================================================
+#  Cloudflare Pages — redirects
+#  Docs: https://developers.cloudflare.com/pages/configuration/redirects/
+#  Format: [source] [destination] [code]
+#
+#  NOTE: Cloudflare Pages ke _redirects me DOMAIN-level redirect
+#  (www.ucbazzar.in -> ucbazzar.in) possible NAHI hai — docs me saaf likha
+#  hai "Domain-level redirects ❌". Uske liye dashboard → Bulk Redirects
+#  wala tarika hai, jo GO-LIVE.md Part 3 me step-by-step likha hai.
+# =====================================================================
+
+# /index.html aur / — dono ek hi page hain. Google ke liye ek URL rakho
+# (canonical pehle se https://ucbazzar.in/ hai, isme match karta hai).
+/index.html  /  301

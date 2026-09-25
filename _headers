@@ -1,0 +1,50 @@
+# =====================================================================
+#  Cloudflare Pages — response headers  (ucbazzar.in)
+#  Ye file live site par serve NAHI hoti. Cloudflare ise build output se
+#  padhti hai aur headers laga deti hai.
+#  Docs: https://developers.cloudflare.com/pages/configuration/headers/
+#  ⚠️ Cache-Control ek hi URL par do baar set na ho — Cloudflare dono ko
+#     comma se jod deta hai aur cache toot jata hai. Isliye /assets/*
+#     ke rules aapas me overlap nahi karte.
+# =====================================================================
+
+# --- Security (har response par) -------------------------------------
+# CSP site ke apne audit ke hisaab se likhi gayi hai: koi inline <script>,
+# koi inline on*="" handler aur koi inline style="" nahi hai. Sirf 3 bahari
+# origin allowed hain — QR API, Google Fonts CSS aur Google Fonts files.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data: https://api.qrserver.com; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self'; connect-src 'self'
+
+# --- HTML hamesha fresh rakho ----------------------------------------
+# Baaki sab cache ho jata hai, isliye page load halka rehta hai. HTML
+# khud cache-busting karta hai (?v= numbers) — isliye yahan max-age 0.
+/
+  Cache-Control: public, max-age=0, must-revalidate
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+# --- Versioned JS/CSS: 1 saal immutable ------------------------------
+# index.html me har file ke aage ?v= number hota hai. Number badla =
+# naya URL = browser taza file uthata hai. Isliye 1 saal cache safe hai.
+/assets/js/*
+  Cache-Control: public, max-age=31536000, immutable
+/assets/css/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# --- Baaki assets (logos, mark.svg, og-cover.png): 7 din -------------
+# /assets/:file sirf seedhe children par lagta hai (js/ aur css/ ke andar
+# nahi), isliye upar wale rules se takrata nahi.
+/assets/:file
+  Cache-Control: public, max-age=604800
+
+# --- ucbazzar.pages.dev ko Google me index hone se roko ---------------
+# Warna ek hi site do URL par index ho jati hai (duplicate content) aur
+# Google ko ranking split kar deta hai. Asli domain: ucbazzar.in
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex
+https://:version.:project.pages.dev/*
+  X-Robots-Tag: noindex

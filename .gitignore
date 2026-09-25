@@ -1,11 +1,15 @@
 # ---------------------------------------------------------------------
 # UCBAZZAR — .gitignore
 #
-# Site deploy ke liye kaun si files jati hain wo .github/workflows/deploy.yml
-# me whitelist se decide hota hai (index.html, assets/, robots.txt,
-# sitemap.xml, CNAME, .nojekyll). Ye file sirf junk ko repo se bahar rakhti
-# hai taki commit history saaf rahe.
+# Site deploy ke liye kaun si files jati hain wo whitelist se decide hota
+# hai — Cloudflare Pages ke build command me (GO-LIVE.md Part 1) aur
+# .github/workflows/deploy.yml me (index.html, assets/, robots.txt,
+# sitemap.xml, _headers, _redirects, .nojekyll). Ye file sirf junk ko repo se
+# bahar rakhti hai taki commit history saaf rahe.
 # ---------------------------------------------------------------------
+
+# Deploy build ka output (machine par banta hai, repo me nahi jaata)
+dist/
 
 # Codebuff / agent tooling (site ka hissa nahi)
 .freebuff/

@@ -38,12 +38,15 @@ jobs:
       # Sirf website ki files publish hoti hain. README.md, GO-LIVE.md,
       # tools/ aur .freebuff/ repo me rahenge par live site par public URL
       # nahi banenge (pehle poora repo upload hota tha).
+      # _headers aur _redirects Cloudflare Pages ke liye hain — GitHub Pages
+      # inhe ignore karta hai, isliye yahan koi nuksan nahi.
       # ⚠️ Root me koi NAYA file add karo (jaise ek naya image ya page) to
-      #    neeche wali list me uska naam bhi daal dena, warna wo live nahi jayega.
+      #    (a) neeche wali list me uska naam bhi daal dena,
+      #    (b) aur Cloudflare Pages ke build command me bhi (GO-LIVE.md Part 1).
       - name: Build site folder
         run: |
           mkdir -p dist
-          cp -r index.html assets robots.txt sitemap.xml CNAME .nojekyll dist/
+          cp -r index.html assets robots.txt sitemap.xml _headers _redirects .nojekyll dist/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
