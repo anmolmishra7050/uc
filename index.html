@@ -63,7 +63,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="assets/css/style.css?v=14" />
+<link rel="stylesheet" href="assets/css/style.css?v=17" />
 </head>
 <body>
 
@@ -108,7 +108,7 @@
           <img class="store-mark lg" src="assets/mark.svg" alt="" width="56" height="56" />
           <span class="hero-badge-text">
             <b>BGMI UC Top-Up Store</b>
-            <small>⚡ Instant delivery • 2-minute top-up</small>
+            <small>⚡ Instant delivery • 2–10 minutes</small>
           </span>
         </div>
         <h1>
@@ -160,6 +160,17 @@
       </div>
 
       <div class="packages" id="packagesGrid"><!-- filled by app.js --></div>
+
+      <!-- Agar JavaScript band ho / purane browser me na chale to customer ko
+           saaf pata chale (warna page khaali dikhta hai) -->
+      <noscript>
+        <div class="card noscript-note">
+          <h3 class="card-title">JavaScript is turned off</h3>
+          <p class="hint">This store builds the package list, UPI QR and the order form with
+            JavaScript. Please turn JavaScript on — or open this site in Chrome, Safari or
+            Firefox — and reload the page to place your order.</p>
+        </div>
+      </noscript>
 
       <p class="packages-note">
         ⓘ Prices are lower than the in-game store rate. Bigger packs cost less per UC.
@@ -457,7 +468,7 @@
 <!-- sticky mobile CTA -->
 <a href="#order" class="mobile-cta" data-scroll>🪙 Buy UC Now</a>
 
-<script src="assets/js/data.js?v=15"></script>
-<script src="assets/js/app.js?v=18"></script>
+<script src="assets/js/data.js?v=16"></script>
+<script src="assets/js/app.js?v=21"></script>
 </body>
 </html>

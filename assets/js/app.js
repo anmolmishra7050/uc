@@ -1,10 +1,106 @@
 /* =====================================================================
    UCBAZZAR — app logic (vanilla JS, no framework)
    Runs directly on GitHub Pages.
+
+   COMPATIBILITY: is file me jaan-boojh kar sirf ES2015 tak ka JavaScript
+   hai — koi async/await, ?. (optional chaining), object spread ya
+   `catch {}` nahi. Purane phone ka browser in me se koi EK cheez bhi
+   nahi samajhta to poori file parse fail ho jati hai aur site khaali
+   dikhne lagti hai (na packages, na order form). Isliye purana-safe
+   syntax + feature fallbacks rakhe gaye hain.
    ===================================================================== */
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+/* ---------------------------------------------------------------------
+   Compatibility helpers (purane Android 4.4/5/6, iOS 10)
+   ------------------------------------------------------------------- */
+
+/* Chrome 57 se pehle padStart nahi hota — order ID aur timer isko use karte hain */
+if (!String.prototype.padStart) {
+  String.prototype.padStart = function (len, pad) {
+    let str = String(this);
+    pad = pad === undefined ? " " : String(pad);
+    while (str.length < len) str = pad + str;
+    return str;
+  };
+}
+
+/* localStorage kuch browsers/modes me access karte hi exception deta hai
+   (purane iOS private mode). Har access yahan se hota hai, taki error aane
+   par bhi site chalti rahe — bas history save na ho. */
+const store = {
+  get(key, fallback) {
+    try {
+      const v = window.localStorage.getItem(key);
+      return v === null ? fallback : v;
+    } catch (e) { return fallback; }
+  },
+  set(key, value) {
+    try { window.localStorage.setItem(key, String(value)); } catch (e) {}
+  },
+};
+
+/* Element na mile to chup-chaap skip — ek missing element se poori site
+   ka JS rukna nahi chahiye (purane cached page me aisa ho sakta hai) */
+function on(selector, event, handler) {
+  const el = $(selector);
+  if (el) el.addEventListener(event, handler);
+  return el;
+}
+
+function setText(selector, value) {
+  const el = $(selector);
+  if (el) el.textContent = value;
+}
+
+function setHidden(selector, hidden) {
+  const el = $(selector);
+  if (el) el.hidden = hidden;
+}
+
+function dispatchInput(el) {
+  let ev;
+  try { ev = new Event("input", { bubbles: true }); }
+  catch (e) {
+    ev = document.createEvent("Event");
+    ev.initEvent("input", true, false);
+  }
+  el.dispatchEvent(ev);
+}
+
+/* Smooth scroll sirf wahan jahan browser support karta hai. Purane browsers
+   me window.scrollTo({...}) chup-chaap kuch nahi karta, isliye fallback. */
+const canSmoothScroll = (function () {
+  try { return "scrollBehavior" in document.documentElement.style; }
+  catch (e) { return false; }
+})();
+
+function scrollToEl(el) {
+  if (!el) return;
+  if (canSmoothScroll) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  else el.scrollIntoView(true);
+}
+
+function scrollToElCenter(el) {
+  if (!el) return;
+  if (canSmoothScroll) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  else el.scrollIntoView(true);
+}
+
+function scrollToY(y) {
+  if (canSmoothScroll) window.scrollTo({ top: y, behavior: "smooth" });
+  else window.scrollTo(0, y);
+}
+
+/* Har boot step alag try/catch me — ek cheez fail ho to baaki site chale */
+function step(fn) {
+  try { fn(); }
+  catch (err) {
+    if (window.console && console.warn) console.warn("UCBAZZAR:", err);
+  }
+}
 
 const money = (n) => "₹" + Number(n).toLocaleString("en-IN");
 /* "720 UC — 720 UC" jaisa repeat na ho, isliye UC count sirf tab jodte hain
@@ -17,7 +113,7 @@ const digits = (s) => String(s).replace(/\D/g, "");
 /* ---------------------------------------------------------------------
    Small helpers
    ------------------------------------------------------------------- */
-function toast(msg, type = "ok") {
+function toast(msg, type) {
   let el = $("#toast");
   if (!el) {
     el = document.createElement("div");
@@ -26,27 +122,32 @@ function toast(msg, type = "ok") {
     document.body.appendChild(el);
   }
   el.textContent = msg;
-  el.dataset.type = type;
+  el.dataset.type = type || "ok";
   el.classList.add("show");
   clearTimeout(el._t);
   el._t = setTimeout(() => el.classList.remove("show"), 2800);
 }
 
-async function copyText(text, label = "Copied") {
-  try {
-    await navigator.clipboard.writeText(text);
-    toast("✅ " + label);
-  } catch {
-    // fallback for old browsers / non-secure context
+/* Clipboard API sirf HTTPS + naye browsers me hai — warna purana
+   execCommand('copy') use hota hai (GitHub Pages HTTPS hai) */
+function copyText(text, label) {
+  const done = function () { toast("✅ " + (label || "Copied")); };
+  const legacy = function () {
     const ta = document.createElement("textarea");
     ta.value = text;
     ta.style.position = "fixed";
     ta.style.opacity = "0";
     document.body.appendChild(ta);
     ta.select();
-    try { document.execCommand("copy"); toast("✅ " + label); }
-    catch { toast("Copy failed — please select the text manually", "warn"); }
-    ta.remove();
+    try { document.execCommand("copy"); done(); }
+    catch (e) { toast("Copy failed — please select the text manually", "warn"); }
+    if (ta.remove) ta.remove();
+    else ta.parentNode.removeChild(ta);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, legacy);
+  } else {
+    legacy();
   }
 }
 
@@ -65,27 +166,96 @@ const upiParam = (v) => String(v)
   .replace(/\+/g, "%2B")
   .replace(/ /g, "%20");
 
-function upiQuery({ amount, note }) {
+function upiQuery(opts) {
   return [
     "pa=" + upiParam(SITE_CONFIG.upiId),
     "pn=" + upiParam(upiSafe(SITE_CONFIG.upiName)),
-    "am=" + Number(amount).toFixed(2),
+    "am=" + Number(opts.amount).toFixed(2),
     "cu=INR",
-    "tn=" + upiParam(upiSafe(note)),
+    "tn=" + upiParam(upiSafe(opts.note)),
   ].join("&");
 }
 
-function buildUpiLink({ amount, note, scheme }) {
-  return (scheme || SITE_CONFIG.upiLinkScheme || "upi://pay") + "?" + upiQuery({ amount, note });
+function buildUpiLink(opts) {
+  const scheme = opts.scheme || SITE_CONFIG.upiLinkScheme || "upi://pay";
+  return scheme + "?" + upiQuery({ amount: opts.amount, note: opts.note });
 }
 
 /* Phones par hi UPI apps khulte hain — desktop par QR zyada kaam ka hai */
 const isPhone = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
   (navigator.maxTouchPoints > 1 && window.innerWidth < 820);
 
+/* ---------------------------------------------------------------------
+   Ticker (scrolling strip)
+   Marquee CSS me hai, par do cheezein JS se theek ki jati hain:
+   1) purane Android / iOS browser `max-content` nahi samajhte — tab track
+      ki width pixels me set karni padti hai, warna translateX(-50%) galat
+      distance banata hai aur loop par jump hota hai.
+   2) ticker screen se bahar ya tab background me ho to animation pause —
+      purane phone ka GPU aur battery bachta hai.
+   ------------------------------------------------------------------- */
+const supportsMaxContent = (function () {
+  try {
+    const d = document.createElement("div");
+    d.style.width = "max-content";
+    return d.style.width === "max-content";
+  } catch (e) { return false; }
+})();
+
+/* max-content na hone par track ki width pixels me set karo.
+   Content do baar hai, isliye aadhe items = ek set. items[0] se items[half]
+   ka faasla = exactly ek set (gap ke saath) — yahi loop ki asli distance hai.
+   Isse translateX(-50%) bilkul ek set ke barabar hota hai, yaani loop par
+   koi jump nahi. (scrollWidth is kaam ke liye galat hai — wo last item ka
+   trailing gap count nahi karta, jisse loop 23px jump karta tha.) */
+function setTickerWidthFallback(track) {
+  const items = track.children;
+  let setW = 0;
+  if (items && items.length > 1 && items.length % 2 === 0) {
+    const half = items.length / 2;
+    setW = items[half].getBoundingClientRect().left -
+      items[0].getBoundingClientRect().left;
+  }
+  if (!setW) { track.style.width = "auto"; setW = track.scrollWidth; }
+  if (setW) track.style.width = setW * 2 + "px";
+  return setW;
+}
+
+function initTicker() {
+  const track = $(".ticker-track");
+  const ticker = $(".ticker");
+  if (!track || !ticker) return;
+
+  // 1) width fallback (sirf un browsers me jahan max-content nahi hai)
+  if (!supportsMaxContent) {
+    setTickerWidthFallback(track);
+    window.addEventListener("resize", function () { setTickerWidthFallback(track); });
+    window.addEventListener("orientationchange", function () { setTickerWidthFallback(track); });
+    // web font aane par text ki width badal jati hai — dobara naapo
+    if (document.fonts && document.fonts.ready && document.fonts.ready.then) {
+      document.fonts.ready.then(function () { setTickerWidthFallback(track); });
+    }
+  }
+
+  // 2) off-screen / background me pause
+  let onScreen = true;
+  const sync = function () {
+    const run = onScreen && !document.hidden;
+    track.style.animationPlayState = run ? "running" : "paused";
+  };
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver(function (entries) {
+      onScreen = !!(entries[0] && entries[0].isIntersecting);
+      sync();
+    }, { rootMargin: "140px" });
+    io.observe(ticker);
+  }
+  document.addEventListener("visibilitychange", sync);
+}
+
 /* Free QR image API — no hosting cost, no API key */
-function qrUrl(data, size = 260) {
-  return "https://api.qrserver.com/v1/create-qr-code/?size=" + size + "x" + size +
+function qrUrl(data, size) {
+  return "https://api.qrserver.com/v1/create-qr-code/?size=" + (size || 260) + "x" + (size || 260) +
     "&margin=6&qzone=1&data=" + encodeURIComponent(data);
 }
 
@@ -95,8 +265,9 @@ function qrUrl(data, size = 260) {
 let selected = null;
 
 function packageCard(p) {
+  const isSel = selected && selected.id === p.id;
   return `
-    <article class="pkg${selected && selected.id === p.id ? " is-selected" : ""}"
+    <article class="pkg${isSel ? " is-selected" : ""}"
              data-id="${p.id}" tabindex="0" role="button"
              aria-label="${p.title} — ${money(p.price)}">
       ${p.tag ? `<span class="pkg-tag">${p.tag}</span>` : ""}
@@ -118,16 +289,19 @@ function packageCard(p) {
         <li>No carding UC — no ID ban</li>
       </ul>
       <button type="button" class="btn btn-primary btn-block" data-select="${p.id}">
-        ${selected && selected.id === p.id ? "✓ Selected" : "Select Package"}
+        ${isSel ? "✓ Selected" : "Select Package"}
       </button>
     </article>`;
 }
 
 function renderPackages() {
-  $("#packagesGrid").innerHTML = PACKAGES.map(packageCard).join("");
+  const grid = $("#packagesGrid");
+  if (!grid) return;
+  grid.innerHTML = PACKAGES.map(packageCard).join("");
 }
 
-function selectPackage(id, opts = {}) {
+function selectPackage(id, opts) {
+  opts = opts || {};
   const p = PACKAGES.find((x) => x.id === id);
   if (!p) return;
   selected = p;
@@ -138,17 +312,20 @@ function selectPackage(id, opts = {}) {
   if (!opts.silent) {
     toast(`🪙 ${p.title} selected`);
     if (opts.scroll !== false) {
-      $("#orderForm").scrollIntoView({ behavior: "smooth", block: "start" });
-      setTimeout(() => $("#gameId")?.focus({ preventScroll: true }), 500);
+      scrollToEl($("#orderForm"));
+      setTimeout(() => {
+        const gid = $("#gameId");
+        if (gid) gid.focus();
+      }, 500);
     }
   }
 }
 
 function updateSummary() {
   const p = selected;
-  $("#sumPackage").textContent = p ? p.title : "—";
-  $("#sumUc").textContent = p ? p.uc.toLocaleString("en-IN") + " UC" : "—";
-  $("#sumTotal").textContent = money(p ? p.price : 0);
+  setText("#sumPackage", p ? p.title : "—");
+  setText("#sumUc", p ? p.uc.toLocaleString("en-IN") + " UC" : "—");
+  setText("#sumTotal", money(p ? p.price : 0));
   const btn = $("#submitBtn");
   if (btn) btn.innerHTML = p
     ? `Generate UPI Payment for ${money(p.price)} →`
@@ -169,11 +346,11 @@ function fillPackageSelect() {
    Payment panel + countdown
    ------------------------------------------------------------------- */
 let countdown = null;
-let orderCounter = Number(localStorage.getItem("uc_order_seq") || 1041);
+let orderCounter = Number(store.get("uc_order_seq", 1041)) || 1041;
 
 function newOrderId() {
   orderCounter += 1;
-  localStorage.setItem("uc_order_seq", String(orderCounter));
+  store.set("uc_order_seq", orderCounter);
   const d = new Date();
   return `UCB-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}` +
     `${String(d.getDate()).padStart(2, "0")}-${orderCounter}`;
@@ -181,8 +358,9 @@ function newOrderId() {
 
 function startTimer(minutes) {
   clearInterval(countdown);
-  let left = minutes * 60;
   const el = $("#timer");
+  if (!el) return;
+  let left = minutes * 60;
   const tick = () => {
     el.textContent = String(Math.floor(left / 60)).padStart(2, "0") + ":" +
       String(Math.max(left % 60, 0)).padStart(2, "0");
@@ -199,58 +377,73 @@ function startTimer(minutes) {
 }
 
 function showPanel(which) {
-  $("#emptyState").hidden = which !== "empty";
-  $("#payPanel").hidden = which !== "pay";
-  $("#processing").hidden = which !== "processing";
+  // hidden = jo panel abhi active NAHI hai (dhyan: yahan !== hona chahiye)
+  const map = {
+    emptyState: which !== "empty",
+    payPanel: which !== "pay",
+    processing: which !== "processing",
+  };
+  Object.keys(map).forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.hidden = map[id];
+  });
 }
 
 function renderUpiApps(payload) {
   const box = $("#upiApps");
   if (!box) return;
   const apps = SITE_CONFIG.upiApps || [];
-  box.innerHTML = apps.map((a) => `
-    <a class="upi-app" href="${buildUpiLink({ ...payload, scheme: a.scheme })}"
-       data-app="${a.name}">${a.logo
-         ? `<img class="upi-app-logo" src="${a.logo}" alt="${a.name} logo" width="20" height="20">`
-         : "📲"}${a.name}</a>`).join("");
+  /* note: object spread ({...payload}) nahi — purane browsers uspe crash karte hain */
+  box.innerHTML = apps.map((a) => {
+    const link = buildUpiLink({ amount: payload.amount, note: payload.note, scheme: a.scheme });
+    const logo = a.logo
+      ? `<img class="upi-app-logo" src="${a.logo}" alt="${a.name} logo" width="20" height="20">`
+      : `<span class="upi-app-emoji">📲</span>`;
+    return `<a class="upi-app" href="${link}" data-app="${a.name}">` +
+      `${logo}<span class="upi-app-name">${a.name}</span></a>`;
+  }).join("");
 }
 
-function openPaymentPanel({ orderId, pkg, gameId, ingameName }) {
+function openPaymentPanel(o) {
+  const pkg = o.pkg;
   const amount = pkg.price;
-  const note = `${orderId} ${pkg.uc}UC ID:${gameId}`;
+  const note = `${o.orderId} ${pkg.uc}UC ID:${o.gameId}`;
   const payload = { amount, note };
   const link = buildUpiLink(payload);
 
   // phone par app buttons ko pehle dikhao, desktop par QR ko
   const panel = $("#payPanel");
-  panel.classList.toggle("is-mobile", isPhone);
-  $("#payNowHint").textContent = isPhone
+  if (panel) panel.classList.toggle("is-mobile", isPhone);
+  setText("#payNowHint", isPhone
     ? "Tap your app — the amount is already filled in. Enter your UPI PIN and you are done."
-    : `Open this page on your phone to pay in one tap, or scan the QR below with your phone.`;
-  $("#payAppNote").hidden = !isPhone;
+    : "Open this page on your phone to pay in one tap, or scan the QR below with your phone.");
+  setHidden("#payAppNote", !isPhone);
   renderUpiApps(payload);
 
   const img = $("#qrImg");
   const fallback = $("#qrFallback");
-  img.hidden = false;
-  fallback.hidden = true;
-  img.onerror = () => { img.hidden = true; fallback.hidden = false; };
-  img.src = qrUrl(link, 260);
-  $("#upiDeepLink").href = link;
+  if (img) {
+    img.hidden = false;
+    img.onerror = function () { img.hidden = true; if (fallback) fallback.hidden = false; };
+    img.src = qrUrl(link, 260);
+  }
+  if (fallback) fallback.hidden = true;
+  const deep = $("#upiDeepLink");
+  if (deep) deep.href = link;
 
-  $("#orderId").textContent = orderId;
-  $("#payGameId").textContent = gameId;
-  $("#payGameName").textContent = ingameName || "—";
-  $("#payNameRow").hidden = !ingameName;
-  $("#upiIdText").textContent = SITE_CONFIG.upiId;
-  $("#payeeName").textContent = SITE_CONFIG.upiName;
-  $("#payAmount").textContent = money(amount);
-  $("#payStepsAmount").textContent = money(amount);
+  setText("#orderId", o.orderId);
+  setText("#payGameId", o.gameId);
+  setText("#payGameName", o.ingameName || "—");
+  setHidden("#payNameRow", !o.ingameName);
+  setText("#upiIdText", SITE_CONFIG.upiId);
+  setText("#payeeName", SITE_CONFIG.upiName);
+  setText("#payAmount", money(amount));
+  setText("#payStepsAmount", money(amount));
 
   // reset panel state (timer restarts, form state stays clean)
   showPanel("pay");
   startTimer(SITE_CONFIG.paymentWindowMinutes);
-  $("#payPanel").scrollIntoView({ behavior: "smooth", block: "center" });
+  scrollToElCenter(panel);
   toast("✅ UPI payment link ready — scan the QR to pay");
 }
 
@@ -274,7 +467,7 @@ function clearErrors(form) {
   $$(".field.has-error", form).forEach((f) => {
     f.classList.remove("has-error");
     const e = $(".err", f);
-    if (e) e.remove();
+    if (e && e.remove) e.remove();
   });
 }
 
@@ -285,14 +478,17 @@ function handleSubmit(e) {
   const form = e.currentTarget;
   clearErrors(form);
 
-  const gameId = digits($("#gameId").value);
-  const ingameName = $("#ingameName").value.trim().toUpperCase();
-  const agree = $("#agree").checked;
+  const gidEl = $("#gameId");
+  const nameEl = $("#ingameName");
+  const agreeEl = $("#agree");
+  const gameId = digits(gidEl ? gidEl.value : "");
+  const ingameName = (nameEl ? nameEl.value : "").trim().toUpperCase();
+  const agree = !!(agreeEl && agreeEl.checked);
   let ok = true;
 
   if (!selected) { toast("Please select a UC package first 🪙", "warn"); ok = false; }
   if (gameId.length < 9 || gameId.length > 12) {
-    fieldError($("#gameId"), "Enter a valid BGMI character ID (9–12 digits).");
+    if (gidEl) fieldError(gidEl, "Enter a valid BGMI character ID (9–12 digits).");
     ok = false;
   }
   if (!agree) { toast("Please accept the terms to continue ☑️", "warn"); ok = false; }
@@ -330,39 +526,49 @@ function confirmPayment() {
 }
 
 function showProcessing(order) {
-  $("#procOrderId").textContent = order.orderId;
-  $("#procPackage").textContent = packLabel(order.pkg);
-  $("#procGameId").textContent = order.gameId + (order.ingameName ? ` (${order.ingameName})` : "");
-  $("#procPaid").textContent = money(order.amount);
-  $("#procAmount").textContent =
-    `We are verifying your payment of ${money(order.amount)} now — your UC will be delivered within 2–10 minutes.`;
+  setText("#procOrderId", order.orderId);
+  setText("#procPackage", packLabel(order.pkg));
+  setText("#procGameId", order.gameId + (order.ingameName ? ` (${order.ingameName})` : ""));
+  setText("#procPaid", money(order.amount));
+  setText("#procAmount",
+    `We are verifying your payment of ${money(order.amount)} now — your UC will be delivered within 2–10 minutes.`);
 
   showPanel("processing");
   renderRecentOrders();
-  $("#processing").scrollIntoView({ behavior: "smooth", block: "center" });
+  scrollToElCenter($("#processing"));
   toast("⏳ Payment Verifying — Thank You");
 }
 
 function resetOrder() {
   clearInterval(countdown);
   currentOrder = null;
-  $("#agree").checked = false;
-  $("#orderForm").reset();
+  const agreeEl = $("#agree");
+  if (agreeEl) agreeEl.checked = false;
+  const form = $("#orderForm");
+  if (form && form.reset) form.reset();
   selected = null;
   renderPackages();
   fillPackageSelect();
   updateSummary();
   showPanel("empty");
-  window.scrollTo({ top: $("#packages").offsetTop - 80, behavior: "smooth" });
+  const pk = $("#packages");
+  if (pk) scrollToY(pk.offsetTop - 80);
   toast("Ready for a new order 🪙");
 }
 
 /* ---------------------------------------------------------------------
    Recent orders (saved on this device only)
    ------------------------------------------------------------------- */
+function readOrders() {
+  try {
+    const raw = store.get("uc_orders", "[]");
+    const list = JSON.parse(raw);
+    return Array.isArray(list) ? list : [];
+  } catch (e) { return []; }
+}
+
 function saveOrder(order) {
-  let list = [];
-  try { list = JSON.parse(localStorage.getItem("uc_orders") || "[]"); } catch { list = []; }
+  let list = readOrders();
   list = list.filter((o) => o.orderId !== order.orderId);
   list.unshift({
     orderId: order.orderId,
@@ -373,7 +579,7 @@ function saveOrder(order) {
     processingAt: order.processingAt || 0,
     ts: order.ts,
   });
-  localStorage.setItem("uc_orders", JSON.stringify(list.slice(0, 5)));
+  store.set("uc_orders", JSON.stringify(list.slice(0, 5)));
 }
 
 /* An order that has been "Processing" for too long stops looking active —
@@ -387,17 +593,19 @@ function displayStatus(o) {
 }
 
 function renderRecentOrders() {
-  let list = [];
-  try { list = JSON.parse(localStorage.getItem("uc_orders") || "[]"); } catch { list = []; }
+  let list = readOrders();
   // keep only orders from the last N hours (config: orderHistoryHours) —
   // older ones disappear from the customer's list entirely
   const hours = Number(SITE_CONFIG.orderHistoryHours) || 1;
   const cutoff = Date.now() - hours * 60 * 60 * 1000;
   list = list.filter((o) => (o.ts || 0) >= cutoff);
   const box = $("#recentOrders");
+  const listBox = $("#recentOrdersList");
+  if (!box || !listBox) return;
   if (!list.length) { box.hidden = true; return; }
   box.hidden = false;
-  $("#recentOrdersList").innerHTML = list.map((o) => {
+
+  listBox.innerHTML = list.map((o) => {
     const status = displayStatus(o);
     return `
     <div class="recent-row">
@@ -450,114 +658,155 @@ function injectCatalogSchema() {
 function initUi() {
   // page title, year + store details
   document.title = `Buy BGMI UC Online — Instant UC Top-Up at Lowest Price | ${SITE_CONFIG.brand}`;
-  $("#year").textContent = new Date().getFullYear();
+  setText("#year", new Date().getFullYear());
 
   // smooth scroll for [data-scroll]
   document.addEventListener("click", (e) => {
-    const link = e.target.closest("a[data-scroll]");
+    const t = e.target;
+    if (!t || !t.closest) return;
+    const link = t.closest("a[data-scroll]");
     if (!link) return;
     const target = document.querySelector(link.getAttribute("href"));
     if (!target) return;
     e.preventDefault();
-    target.scrollIntoView({ behavior: "smooth", block: "start" });
-    if (target.id === "order") $("#gameId")?.focus({ preventScroll: true });
+    scrollToEl(target);
+    if (target.id === "order") {
+      const gid = $("#gameId");
+      if (gid) gid.focus();
+    }
   });
 
   // header shadow
   const header = $("#header");
-  const onScroll = () => header.classList.toggle("is-stuck", window.scrollY > 20);
-  window.addEventListener("scroll", onScroll, { passive: true });
-  onScroll();
+  if (header) {
+    const onScroll = () => {
+      const y = window.pageYOffset || window.scrollY || 0;
+      header.classList.toggle("is-stuck", y > 20);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+  }
 
   // mobile menu
   const menuBtn = $("#menuBtn");
-  menuBtn.addEventListener("click", () => {
-    const open = document.body.classList.toggle("nav-open");
-    menuBtn.setAttribute("aria-expanded", String(open));
-  });
+  if (menuBtn) {
+    menuBtn.addEventListener("click", () => {
+      const open = document.body.classList.toggle("nav-open");
+      menuBtn.setAttribute("aria-expanded", String(open));
+    });
+  }
   $$("#nav a").forEach((a) => a.addEventListener("click", () => {
     document.body.classList.remove("nav-open");
-    menuBtn.setAttribute("aria-expanded", "false");
+    if (menuBtn) menuBtn.setAttribute("aria-expanded", "false");
   }));
 
-  // reveal on scroll
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach((en) => {
-      if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); }
+  // reveal on scroll. Jo browser IntersectionObserver nahi samajhta, wahan
+  // koi class nahi lagti — content turant dikhta hai (invisible nahi rehta).
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((en) => {
+        if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); }
+      });
+    }, { threshold: 0.12 });
+    $$(".section-head, .pkg, .card").forEach((el) => {
+      el.classList.add("reveal");
+      io.observe(el);
     });
-  }, { threshold: 0.12 });
-  $$(".section-head, .pkg, .card").forEach((el) => {
-    el.classList.add("reveal");
-    io.observe(el);
-  });
+  }
 
   // copy buttons
-  $("#copyUpi").addEventListener("click", () => copyText(SITE_CONFIG.upiId, "UPI ID copied"));
-  $("#copyOrderId").addEventListener("click", () =>
+  on("#copyUpi", "click", () => copyText(SITE_CONFIG.upiId, "UPI ID copied"));
+  on("#copyOrderId", "click", () =>
     copyText(currentOrder ? currentOrder.orderId : "—", "Order ID copied"));
 
   // paste helpers (clipboard needs HTTPS — GitHub Pages is HTTPS)
-  const pasteInto = async (input, onlyDigits, label) => {
-    try {
-      const text = await navigator.clipboard.readText();
+  const pasteInto = (input, onlyDigits, label) => {
+    const apply = (text) => {
       const value = onlyDigits
         ? digits(text).slice(0, 12)
-        : text.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 22);
-      if (!value) return toast("Nothing usable found in the clipboard", "warn");
+        : String(text).replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 22);
+      if (!value) { toast("Nothing usable found in the clipboard", "warn"); return; }
       input.value = value;
-      input.dispatchEvent(new Event("input", { bubbles: true }));
+      dispatchInput(input);
       toast("📋 " + label + " pasted");
-    } catch {
-      toast("Paste is blocked — please type it manually", "warn");
+    };
+    const blocked = () => toast("Paste is blocked — please type it manually", "warn");
+    if (navigator.clipboard && navigator.clipboard.readText) {
+      navigator.clipboard.readText().then(apply, blocked);
+    } else {
+      blocked();
     }
   };
-  $("#pasteBtn").addEventListener("click", () => pasteInto($("#gameId"), true, "Character ID"));
+  on("#pasteBtn", "click", () => {
+    const gid = $("#gameId");
+    if (gid) pasteInto(gid, true, "Character ID");
+  });
 
   // input formatting
-  $("#gameId").addEventListener("input", (e) => {
+  on("#gameId", "input", (e) => {
     e.target.value = digits(e.target.value).slice(0, 12);
     const len = e.target.value.length;
-    $("#gameIdHint").textContent = len
+    const hint = $("#gameIdHint");
+    if (hint) hint.textContent = len
       ? `${len} digits entered ${len >= 9 ? "✅" : "(at least 9 required)"}`
       : "A 9–12 digit number. You can find it under your name on the profile screen.";
   });
 
   // payment method styling
   $$(".pay-method").forEach((m) => m.addEventListener("change", () => {
-    $$(".pay-method").forEach((x) => x.classList.toggle("is-active", $("input", x).checked));
+    $$(".pay-method").forEach((x) => {
+      const inp = $("input", x);
+      x.classList.toggle("is-active", !!(inp && inp.checked));
+    });
   }));
 
   // package cards — event delegation (cards re-render)
   const grid = $("#packagesGrid");
-  grid.addEventListener("click", (e) => {
-    const card = e.target.closest(".pkg");
-    if (card) selectPackage(card.dataset.id);
-  });
-  grid.addEventListener("keydown", (e) => {
-    if (e.key !== "Enter" && e.key !== " ") return;
-    const card = e.target.closest(".pkg");
-    if (card) { e.preventDefault(); selectPackage(card.dataset.id); }
-  });
+  if (grid) {
+    grid.addEventListener("click", (e) => {
+      const t = e.target;
+      const card = t && t.closest ? t.closest(".pkg") : null;
+      if (card) selectPackage(card.dataset.id);
+    });
+    grid.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      const t = e.target;
+      const card = t && t.closest ? t.closest(".pkg") : null;
+      if (card) { e.preventDefault(); selectPackage(card.dataset.id); }
+    });
+  }
 
   // order + payment confirmation (guarded — a stale cached page must not crash init)
-  $("#orderForm")?.addEventListener("submit", handleSubmit);
-  $("#confirmPaid")?.addEventListener("click", confirmPayment);
-  $("#newOrder")?.addEventListener("click", resetOrder);
+  on("#orderForm", "submit", handleSubmit);
+  on("#confirmPaid", "click", confirmPayment);
+  on("#newOrder", "click", resetOrder);
 }
 
 /* ---------------------------------------------------------------------
-   Boot
+   Boot — har step alag guard me, taki ek purane browser me koi ek API
+   missing hone par bhi baaki site poori tarah chale.
    ------------------------------------------------------------------- */
-document.addEventListener("DOMContentLoaded", () => {
-  initUi();
-  fillPackageSelect();
-  renderPackages();
-  injectCatalogSchema();
-  renderRecentOrders();
-  updateSummary();
-  showPanel("empty");
+let booted = false;
+
+function boot() {
+  if (booted) return;
+  booted = true;
+  step(initUi);
+  step(initTicker);
+  step(fillPackageSelect);
+  step(renderPackages);
+  step(injectCatalogSchema);
+  step(renderRecentOrders);
+  step(updateSummary);
+  step(() => showPanel("empty"));
 
   // keep the recent-orders list honest while the page stays open:
   // a Processing order flips to Failed once the window passes
-  setInterval(renderRecentOrders, 30000);
-});
+  step(() => setInterval(renderRecentOrders, 30000));
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", boot);
+} else {
+  boot();
+}

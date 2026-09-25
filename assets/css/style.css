@@ -30,7 +30,13 @@
    beat the hidden attribute — without this the panel stays visible */
 [hidden] { display: none !important; }
 
-html { scroll-behavior: smooth; }
+/* Purane iPhones / Android landscape me font apne aap bada ho jata hai —
+   ye usko rokta hai taki layout sab devices par same rahe */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 
 body {
   background: var(--bg);
@@ -39,19 +45,35 @@ body {
   font-size: 16px;
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   overflow-x: hidden;
   padding-bottom: 76px;
 }
 
+/* IMPORTANT — "do line" pattern: jo property purane browsers me nahi hoti
+   (clamp, min, inset, gap...) uski pehle ek simple value likhi jati hai.
+   Purana browser doosri line ko invalid samajh kar chhod deta hai aur pehli
+   line use karta hai; naya browser doosri line se override kar deta hai.
+   Isi wajah se ye site Chrome 49+ / iOS 10+ tak sahi dikhti hai. */
 h1, h2, h3, .logo-text { font-family: var(--font-head); letter-spacing: .3px; line-height: 1.15; }
-h1 { font-size: clamp(2.1rem, 5.2vw, 3.6rem); font-weight: 700; text-transform: uppercase; }
-h2 { font-size: clamp(1.7rem, 3.6vw, 2.5rem); font-weight: 700; text-transform: uppercase; }
+h1 {
+  font-size: 2.35rem;
+  font-size: clamp(2.1rem, 5.2vw, 3.6rem);
+  font-weight: 700; text-transform: uppercase; overflow-wrap: break-word;
+}
+h2 {
+  font-size: 1.85rem;
+  font-size: clamp(1.7rem, 3.6vw, 2.5rem);
+  font-weight: 700; text-transform: uppercase; overflow-wrap: break-word;
+}
 h3 { font-size: 1.15rem; font-weight: 700; }
 a { color: inherit; text-decoration: none; }
 img { max-width: 100%; display: block; }
 code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 
-.container { width: min(1200px, 92vw); margin-inline: auto; }
+/* width: min(1200px, 92vw) ke bilkul barabar result — magar min() ke bina */
+.container { width: 92vw; max-width: 1200px; margin-left: auto; margin-right: auto; }
 .mt-18 { margin-top: 18px; }
 .muted { color: var(--muted); }
 .green { color: var(--accent); }
@@ -63,16 +85,20 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 }
 
 /* ---------------- background fx ---------------- */
-.bg-fx { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
-.bg-fx .glow { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .5; }
+.bg-fx { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: -1; overflow: hidden; }
+.bg-fx .glow {
+  position: absolute; border-radius: 50%; opacity: .5;
+  filter: blur(90px); -webkit-filter: blur(90px);
+}
 .glow-a { width: 620px; height: 620px; background: rgba(255, 106, 0, .28); top: -180px; left: -160px; }
 .glow-b { width: 700px; height: 700px; background: rgba(0, 224, 164, .14); bottom: -260px; right: -200px; }
 .grid-lines {
-  position: absolute; inset: 0;
+  position: absolute; top: 0; right: 0; bottom: 0; left: 0;
   background-image:
     linear-gradient(rgba(255, 255, 255, .035) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, .035) 1px, transparent 1px);
   background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(circle at 50% 20%, #000 0%, transparent 72%);
   mask-image: radial-gradient(circle at 50% 20%, #000 0%, transparent 72%);
 }
 
@@ -103,6 +129,10 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
    overflow on narrow phones (the card could not shrink below the label) */
 .btn-block { width: 100%; white-space: normal; text-align: center; }
 
+/* flexbox ka gap: Chrome 84+ / iOS 14.5+. Purane browsers me gap 0 ban jata
+   hai, isliye rows par spacing margins se bhi lagayi gayi hai — naye
+   browsers par dono ka result same dikhta hai. */
+
 .pill {
   display: inline-flex; align-items: center; gap: 8px; font-size: .8rem; font-weight: 600;
   padding: 7px 14px; border-radius: 999px; color: #ffd166;
@@ -111,11 +141,12 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 }
 
 .hero-badge {
-  display: inline-flex; align-items: center; gap: 13px; padding: 7px 22px 7px 8px;
+  display: inline-flex; align-items: center; padding: 7px 22px 7px 8px;
   border-radius: 999px; text-align: left;
   background: linear-gradient(135deg, rgba(255, 176, 32, .13), rgba(255, 106, 0, .05));
   border: 1px solid rgba(255, 176, 32, .32);
 }
+.hero-badge > * + * { margin-left: 13px; }
 .hero-badge-text { display: flex; flex-direction: column; line-height: 1.3; }
 .hero-badge-text b {
   font-family: var(--font-head); font-size: 1.02rem; text-transform: uppercase;
@@ -124,25 +155,38 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .hero-badge-text small { font-size: .76rem; color: #ffd166; }
 
 /* ---------------- header ---------------- */
+/* Default: solid header. Jo browsers blur ka blur effect samajhte hain,
+   unke liye hi transparent version lagta hai — warna purane browsers me
+   niche ka content header ke aar-paar dikhta hai. */
 .site-header {
   position: sticky; top: 0; z-index: 60;
-  background: rgba(7, 8, 11, .72);
-  backdrop-filter: blur(14px);
+  background: rgba(7, 8, 11, .97);
   border-bottom: 1px solid transparent;
   transition: .3s ease;
 }
-.site-header.is-stuck { border-bottom-color: var(--line-soft); background: rgba(7, 8, 11, .92); }
+.site-header.is-stuck { border-bottom-color: var(--line-soft); }
+@supports ((backdrop-filter: blur(14px)) or (-webkit-backdrop-filter: blur(14px))) {
+  .site-header {
+    background: rgba(7, 8, 11, .72);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+  }
+  .site-header.is-stuck { background: rgba(7, 8, 11, .92); }
+}
 .header-inner { display: flex; align-items: center; gap: 20px; height: 72px; }
-.logo { display: inline-flex; align-items: center; gap: 10px; font-size: 1.35rem; }
+.logo { display: inline-flex; align-items: center; font-size: 1.35rem; }
+.logo > * + * { margin-left: 10px; }
 .logo-coin {
-  width: 34px; height: 34px; display: grid; place-items: center;
+  /* flex centering: grid ka place-items purane browsers me support nahi hota */
+  width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
   border-radius: 50%; background: var(--grad); color: #100b02;
   font-weight: 800; font-family: var(--font); box-shadow: var(--glow);
 }
 .logo-text { text-transform: uppercase; letter-spacing: 1px; }
 .logo-text strong { color: var(--brand); }
 
-.nav { display: flex; gap: 26px; margin-left: auto; }
+.nav { display: flex; margin-left: auto; }
+.nav a + a { margin-left: 26px; }
 .nav a { font-size: .92rem; font-weight: 500; color: var(--muted); transition: .2s; position: relative; }
 .nav a:hover { color: var(--text); }
 .nav a::after {
@@ -151,15 +195,17 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 }
 .nav a:hover::after { width: 100%; }
 
-.header-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+.header-actions { display: flex; align-items: center; margin-left: auto; }
+.header-actions > * + * { margin-left: 12px; }
 .nav + .header-actions { margin-left: 0; }
 .live-dot {
-  display: inline-flex; align-items: center; gap: 7px;
+  display: inline-flex; align-items: center;
   font-size: .78rem; color: var(--muted);
   padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px;
 }
 .live-dot span {
-  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+  width: 8px; height: 8px; margin-right: 7px;
+  border-radius: 50%; background: var(--accent);
   box-shadow: 0 0 0 0 rgba(0, 224, 164, .7); animation: pulse 2s infinite;
 }
 @keyframes pulse {
@@ -167,22 +213,31 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
   100% { box-shadow: 0 0 0 0 rgba(0, 224, 164, 0); }
 }
 .menu-btn {
-  display: none; flex-direction: column; gap: 5px; background: none;
+  display: none; flex-direction: column; background: none;
   border: 1px solid var(--line); border-radius: 10px; padding: 9px; cursor: pointer;
 }
 .menu-btn span { width: 18px; height: 2px; background: var(--text); border-radius: 2px; }
+.menu-btn span + span { margin-top: 5px; }
 
 /* ---------------- hero ---------------- */
-.hero { padding: clamp(48px, 8vw, 100px) 0 24px; }
+.hero {
+  padding: 64px 0 24px;
+  padding-top: clamp(48px, 8vw, 100px);
+}
 .hero-grid { display: block; }
-.hero-copy { max-width: 860px; margin-inline: auto; text-align: center; }
+.hero-copy { max-width: 860px; margin-left: auto; margin-right: auto; text-align: center; }
 .hero-copy h1 { margin: 18px 0 16px; }
-.lead { color: var(--muted); font-size: 1.06rem; max-width: 62ch; margin-inline: auto; }
-.hero-cta { display: flex; gap: 14px; flex-wrap: wrap; margin: 28px 0; justify-content: center; }
-.trust-chips { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.lead { color: var(--muted); font-size: 1.06rem; max-width: 62ch; margin-left: auto; margin-right: auto; }
+/* buttons/chips ki spacing margins se (flex gap ka fallback). Negative
+   container margin jaan-boojh kar nahi diya — wo chhoti screen par 1-2px
+   ka horizontal overflow paida kar deti hai. */
+.hero-cta { display: flex; flex-wrap: wrap; margin: 21px 0; justify-content: center; }
+.hero-cta > * { margin: 7px; }
+.trust-chips { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; }
+.trust-chips li { margin: 5px; }
 .reveal-hero { animation: heroIn .6s cubic-bezier(.2, .7, .3, 1) both; }
 @keyframes heroIn { from { opacity: 0; transform: translateY(18px); } }
-.trust-chips li {
+.trust-chips > li {
   font-size: .82rem; color: var(--muted); padding: 8px 14px;
   background: rgba(255, 255, 255, .035); border: 1px solid var(--line); border-radius: 999px;
 }
@@ -196,14 +251,38 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 /* ---------------- ticker ---------------- */
 .ticker {
   margin: 40px 0 8px; padding: 12px 0; overflow: hidden;
-  border-block: 1px solid var(--line-soft);
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
   background: rgba(255, 176, 32, .045);
 }
-.ticker-track { display: flex; gap: 46px; width: max-content; animation: slide 34s linear infinite; }
-.ticker-track span { font-size: .86rem; font-weight: 600; color: #e9c98a; white-space: nowrap; }
+.ticker-track {
+  display: flex; animation: slide 34s linear infinite;
+  /* -webkit-max-content: Android 4.4-6 aur purane iOS ke liye.
+     Agar browser max-content nahi samajhta (tab width auto rehti hai) to
+     app.js me initTicker() width pixels me set kar deta hai — warna
+     translateX(-50%) galat distance banata hai aur loop par jump hota hai. */
+  width: -webkit-max-content; width: max-content;
+  /* flexbox na ho to bhi saare items ek hi line me rahein (kata hua strip) */
+  white-space: nowrap;
+  /* Android par apna GPU layer — marquee har frame repaint nahi karta */
+  will-change: transform;
+}
+/* Spacing har item par padding-right se — margin-right se nahi.
+   Wajah: scrollWidth trailing margin ko count nahi karta, isliye JS width
+   fallback me loop 23px jump kar jata tha. Padding se track ka aadha hissa
+   bilkul ek set ke barabar rehta hai aur loop seamless hota hai. */
+.ticker-track span {
+  flex: 0 0 auto; padding-right: 46px;
+  font-size: .86rem; font-weight: 600; color: #e9c98a; white-space: nowrap;
+}
+@keyframes slide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
 /* ---------------- sections ---------------- */
-.section { padding: clamp(56px, 7vw, 92px) 0; }
+.section {
+  padding: 64px 0;
+  padding-top: clamp(56px, 7vw, 92px);
+  padding-bottom: clamp(56px, 7vw, 92px);
+}
 .section-head { text-align: center; max-width: 720px; margin: 0 auto 42px; }
 .section-head .kicker {
   display: inline-block; font-size: .76rem; font-weight: 700; letter-spacing: 2px;
@@ -215,7 +294,8 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .reveal.in { opacity: 1; transform: none; }
 
 /* ---------------- packages ---------------- */
-.packages { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 20px; }
+/* grid-gap purane Chrome (57-65) ke liye, gap naye browsers ke liye */
+.packages { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); grid-gap: 20px; gap: 20px; }
 .pkg {
   position: relative; padding: 24px; border-radius: var(--radius);
   background: linear-gradient(170deg, var(--panel-2), var(--panel));
@@ -234,9 +314,11 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
   background: var(--grad); color: #100b02; padding: 4px 12px; border-radius: 999px;
 }
 .pkg.is-selected .pkg-tag { display: none; }
-.pkg-head { display: flex; gap: 13px; align-items: center; margin-bottom: 16px; }
+.pkg-head { display: flex; align-items: center; margin-bottom: 16px; }
+.pkg-head > * + * { margin-left: 13px; }
 .pkg-coin {
-  width: 46px; height: 46px; flex: 0 0 auto; display: grid; place-items: center;
+  width: 46px; height: 46px; flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
   border-radius: 50%; font-weight: 800; font-size: .78rem;
   background: radial-gradient(circle at 35% 30%, #ffe08a, #ffb020 55%, #c97600);
   color: #2a1b00; border: 2px solid rgba(255, 255, 255, .3);
@@ -250,7 +332,7 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
   background: rgba(255, 176, 32, .1); border: 1px solid rgba(255, 176, 32, .3);
   padding: 5px 11px; border-radius: 999px; margin-bottom: 14px;
 }
-.pkg-points { list-style: none; margin-bottom: 20px; display: grid; gap: 7px; }
+.pkg-points { list-style: none; margin-bottom: 20px; display: grid; grid-gap: 7px; gap: 7px; }
 .pkg-points li { font-size: .84rem; color: var(--muted); padding-left: 20px; position: relative; }
 .pkg-points li::before { content: "✓"; position: absolute; left: 0; color: var(--brand); font-weight: 700; }
 .pkg .btn { margin-top: auto; }
@@ -264,9 +346,10 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .card-title { font-size: 1.05rem; margin-bottom: 18px; }
 .card-title.mt { margin-top: 26px; }
 
-.order-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 22px; align-items: start; }
+.order-grid { display: grid; grid-template-columns: 1.2fr .8fr; grid-gap: 22px; gap: 22px; align-items: start; }
 
-.field { margin-bottom: 18px; display: flex; flex-direction: column; gap: 7px; }
+.field { margin-bottom: 18px; display: flex; flex-direction: column; }
+.field > * + * { margin-top: 7px; }
 .field label { font-size: .84rem; font-weight: 600; color: #c3cbd9; }
 .req { color: var(--brand); }
 .opt { color: var(--muted); font-weight: 400; font-size: .78rem; }
@@ -280,7 +363,7 @@ input[type="text"], input[type="tel"], select {
 .input-wrap input { padding-right: 74px; }
 input:focus, select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(255, 176, 32, .13); }
 input::placeholder { color: #5d667a; }
-select { appearance: none; cursor: pointer;
+select { -webkit-appearance: none; appearance: none; cursor: pointer;
   background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
   background-position: calc(100% - 20px) 22px, calc(100% - 14px) 22px;
   background-size: 6px 6px, 6px 6px; background-repeat: no-repeat;
@@ -289,7 +372,7 @@ select { appearance: none; cursor: pointer;
 select option { background: #0b0e14; }
 .hint { font-size: .78rem; color: var(--muted); }
 .hint.warn { color: #f0b446; margin-top: 12px; }
-.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; grid-gap: 16px; gap: 16px; }
 .field.has-error input { border-color: var(--danger); }
 .err { font-size: .78rem; color: var(--danger); }
 
@@ -302,18 +385,21 @@ select option { background: #0b0e14; }
 .input-wrap .mini-btn { position: absolute; right: 8px; }
 
 /* payment methods */
-.pay-methods { display: grid; gap: 12px; }
+.pay-methods { display: grid; grid-gap: 12px; gap: 12px; }
 .pay-method {
-  display: flex; align-items: center; gap: 12px; cursor: pointer;
+  display: flex; align-items: center; cursor: pointer;
   padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius-sm);
   background: #0b0e14; transition: .22s;
 }
 .pay-method:hover { border-color: rgba(255, 176, 32, .4); }
 .pay-method.is-active { border-color: var(--brand); background: rgba(255, 176, 32, .07); }
+.pay-method > * + * { margin-left: 12px; }
 .pay-method input { accent-color: var(--brand); width: 17px; height: 17px; }
-.pm-body { display: flex; align-items: center; gap: 12px; }
+.pm-body { display: flex; align-items: center; }
+.pm-body > * + * { margin-left: 12px; }
 .pm-logo {
-  width: 42px; height: 32px; display: grid; place-items: center; border-radius: 8px;
+  width: 42px; height: 32px; display: flex; align-items: center; justify-content: center;
+  border-radius: 8px;
   font-size: .68rem; font-weight: 800; letter-spacing: .5px; color: #100b02;
 }
 .pm-logo.upi { background: var(--grad); }
@@ -322,14 +408,16 @@ select option { background: #0b0e14; }
 .pm-text b { font-size: .9rem; }
 .pm-text small { font-size: .76rem; color: var(--muted); }
 
-.checkbox { display: flex; gap: 11px; align-items: flex-start; margin: 20px 0; font-size: .84rem; color: var(--muted); }
+.checkbox { display: flex; align-items: flex-start; margin: 20px 0; font-size: .84rem; color: var(--muted); }
+.checkbox > * + * { margin-left: 11px; }
 .checkbox input { accent-color: var(--brand); width: 17px; height: 17px; margin-top: 3px; flex: 0 0 auto; }
 .checkbox a { color: var(--brand); text-decoration: underline; }
 .form-note { font-size: .74rem; color: var(--muted); text-align: center; margin-top: 12px; }
 
 /* summary */
 .order-summary { position: sticky; top: 92px; }
-.summary-line { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; font-size: .9rem; color: var(--muted); border-bottom: 1px dashed var(--line-soft); }
+.summary-line { display: flex; justify-content: space-between; padding: 9px 0; font-size: .9rem; color: var(--muted); border-bottom: 1px dashed var(--line-soft); }
+.summary-line > * + * { margin-left: 12px; }
 .summary-line b { color: var(--text); font-weight: 600; text-align: right; }
 .summary-line.small { font-size: .82rem; padding: 6px 0; }
 .summary-line.total { border-bottom: none; padding-top: 16px; font-size: .95rem; }
@@ -365,9 +453,10 @@ select option { background: #0b0e14; }
 }
 .pay-now > p { font-size: .84rem; color: var(--muted); margin-bottom: 14px; }
 .pay-now .btn-block { margin-bottom: 12px; }
-.upi-apps { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.upi-apps { display: grid; grid-template-columns: 1fr 1fr; grid-gap: 8px; gap: 8px; }
+.upi-app-name { margin-left: 8px; }
 .upi-app {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
+  display: flex; align-items: center; justify-content: center;
   font-size: .82rem; font-weight: 600; color: var(--text);
   padding: 11px 10px; border-radius: 12px; transition: .22s;
   background: rgba(255, 255, 255, .04); border: 1px solid var(--line);
@@ -382,14 +471,16 @@ select option { background: #0b0e14; }
 .timer.low { color: var(--danger); }
 
 .qr-box {
-  display: grid; place-items: center; padding: 16px; margin-bottom: 16px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 16px; margin-bottom: 16px;
   background: #fff; border-radius: var(--radius-sm); min-height: 180px;
 }
-.qr-box img { width: 200px; height: 200px; }
+/* height auto — chhoti screen par QR sikudne par distort na ho */
+.qr-box img { width: 200px; max-width: 100%; height: auto; }
 .qr-fallback { color: #111; font-size: .82rem; font-weight: 600; text-align: center; padding: 24px 8px; }
 
 .upi-id-box {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  display: flex; align-items: center; justify-content: space-between;
   background: #0b0e14; border: 1px dashed rgba(255, 176, 32, .45);
   border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 14px;
 }
@@ -397,10 +488,11 @@ select option { background: #0b0e14; }
 .upi-id-box code { font-size: .95rem; color: var(--brand); font-weight: 600; word-break: break-all; }
 
 .app-buttons { display: grid; gap: 10px; margin: 18px 0; }
-.split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.split { display: grid; grid-template-columns: 1fr 1fr; grid-gap: 10px; gap: 10px; }
 .split .btn { font-size: .82rem; padding: 11px 12px; }
 
-.pay-steps { margin: 16px 0 0 18px; display: grid; gap: 7px; font-size: .84rem; color: var(--muted); }
+.upi-id-box > * + * { margin-left: 12px; }
+.pay-steps { margin: 16px 0 0 18px; display: grid; grid-gap: 7px; gap: 7px; font-size: .84rem; color: var(--muted); }
 .pay-steps b { color: var(--brand); }
 
 /* payment confirmation */
@@ -413,7 +505,8 @@ select option { background: #0b0e14; }
 
 /* payment processing state */
 .processing { margin-top: 18px; border-top: 1px solid var(--line-soft); padding-top: 20px; animation: rise .45s ease; }
-.proc-head { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.proc-head { display: flex; align-items: center; margin-bottom: 16px; }
+.proc-head > * + * { margin-left: 14px; }
 .proc-head h3 { font-size: 1.2rem; color: var(--brand); }
 .proc-head p { font-size: .82rem; color: var(--muted); }
 .spinner {
@@ -428,7 +521,7 @@ select option { background: #0b0e14; }
   border-radius: var(--radius-sm);
 }
 
-.timeline { list-style: none; margin: 18px 0; display: grid; gap: 2px; }
+.timeline { list-style: none; margin: 18px 0; display: grid; grid-gap: 2px; gap: 2px; }
 .timeline li { position: relative; padding: 0 0 16px 26px; border-left: 2px solid var(--line); }
 .timeline li:last-child { border-left-color: transparent; padding-bottom: 0; }
 .timeline li::before {
@@ -448,9 +541,10 @@ select option { background: #0b0e14; }
   letter-spacing: .8px; color: var(--muted); margin-bottom: 10px;
 }
 .recent-row {
-  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  display: flex; justify-content: space-between; align-items: center;
   padding: 10px 0; border-bottom: 1px dashed var(--line-soft);
 }
+.recent-row > * + * { margin-left: 12px; }
 .recent-row:last-child { border-bottom: none; }
 .recent-row b { font-size: .84rem; }
 .recent-row .meta { display: block; font-size: .72rem; color: var(--muted); }
@@ -468,18 +562,19 @@ select option { background: #0b0e14; }
 }
 
 /* ---------------- payment info ---------------- */
-.pay-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 20px; }
-.app-chip-row { display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 16px; }
+.pay-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); grid-gap: 20px; gap: 20px; }
+.app-chip-row { display: flex; flex-wrap: wrap; margin: 0 0 12px; }
+.app-chip-row .app-chip { margin: 4px; }
 .app-chip {
   font-size: .8rem; font-weight: 600; color: #cfd7e6; padding: 8px 14px;
   background: rgba(255, 255, 255, .04); border: 1px solid var(--line); border-radius: 999px;
 }
-.check-list { list-style: none; display: grid; gap: 11px; }
+.check-list { list-style: none; display: grid; grid-gap: 11px; gap: 11px; }
 .check-list li { position: relative; padding-left: 26px; font-size: .88rem; color: var(--muted); }
 .check-list li::before {
   content: "✔"; position: absolute; left: 0; top: 1px; font-size: .8rem;
   color: var(--accent); background: rgba(0, 224, 164, .12); border-radius: 50%;
-  width: 18px; height: 18px; display: grid; place-items: center;
+  width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;
 }
 .check-list b { color: var(--text); }
 
@@ -489,7 +584,7 @@ select option { background: #0b0e14; }
   background: linear-gradient(180deg, rgba(16, 19, 26, .6), #05060a);
   padding-top: 56px;
 }
-.footer-grid { display: grid; grid-template-columns: 1.8fr 1fr 1fr; gap: 34px; }
+.footer-grid { display: grid; grid-template-columns: 1.8fr 1fr 1fr; grid-gap: 34px; gap: 34px; }
 .footer-col h4 { font-family: var(--font-head); font-size: 1rem; text-transform: uppercase;
   letter-spacing: 1px; margin-bottom: 16px; color: var(--brand); }
 .footer-col a { display: block; color: var(--muted); font-size: .88rem; padding: 5px 0; transition: .2s; }
@@ -518,7 +613,9 @@ select option { background: #0b0e14; }
 
 .mobile-cta {
   display: none; position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
-  z-index: 80; padding: 14px 30px; border-radius: 999px;
+  z-index: 80; padding: 14px 30px; border-radius: 999px; white-space: nowrap;
+  /* text ek line me rahe — warna 320px par "Buy UC / Now" me toot jata hai */
+  width: -webkit-max-content; width: max-content; max-width: 92vw;
   background: var(--grad); color: #100b02; font-weight: 800;
   box-shadow: 0 12px 34px rgba(255, 106, 0, .4);
 }
@@ -531,12 +628,17 @@ select option { background: #0b0e14; }
 }
 
 @media (max-width: 780px) {
+  /* inset: shorthand purane browsers me nahi hota — top/right/bottom/left
+     alag likhna har jagah chalta hai */
   .nav {
-    position: fixed; inset: 72px 0 auto; flex-direction: column; gap: 0;
+    position: fixed; top: 72px; right: 0; bottom: auto; left: 0;
+    flex-direction: column; max-height: calc(100vh - 72px); overflow-y: auto;
     background: rgba(8, 9, 13, .98); border-bottom: 1px solid var(--line);
-    padding: 10px 6vw 22px; transform: translateY(-130%); transition: .3s; z-index: 55;
+    padding: 10px 6vw 22px; transform: translateY(-130%);
+    transition: transform .3s, visibility .3s; visibility: hidden; z-index: 55;
   }
-  body.nav-open .nav { transform: none; }
+  body.nav-open .nav { transform: none; visibility: visible; }
+  .nav a + a { margin-left: 0; }
   .nav a { padding: 14px 0; border-bottom: 1px solid var(--line-soft); font-size: 1rem; }
   .menu-btn { display: flex; }
   .live-dot { display: none; }
@@ -546,7 +648,52 @@ select option { background: #0b0e14; }
   .footer-grid { grid-template-columns: 1fr; }
   .footer-bottom { flex-direction: column; }
   .split { grid-template-columns: 1fr; }
+
+  /* purane/budget phones par 90px blur aur backdrop-filter scroll ko
+     laggy bana dete hain — phone par halka kar diya */
+  .bg-fx .glow-a { width: 420px; height: 420px; filter: blur(52px); -webkit-filter: blur(52px); }
+  .bg-fx .glow-b { width: 460px; height: 460px; filter: blur(52px); -webkit-filter: blur(52px); }
+  .site-header { background: rgba(7, 8, 11, .94); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .site-header.is-stuck { background: rgba(7, 8, 11, .97); }
 }
+
+/* chhoti screens — purane phones zyada tar 320-480px hi hote hain */
+@media (max-width: 480px) {
+  .container { width: 94vw; }
+  .card { padding: 18px; }
+  .pkg { padding: 20px 18px; }
+  .hero-cta { flex-direction: column; align-items: stretch; margin: 18px 0; }
+  .hero-cta > * { margin: 0 0 10px; }
+  .hero-cta > *:last-child { margin-bottom: 0; }
+  .hero-badge { padding: 7px 16px 7px 8px; }
+  .pay-now, .confirm-box { padding: 14px; }
+  .qr-box { padding: 12px; min-height: 0; }
+  .qr-box img { width: 170px; }
+  .summary-line.total b { font-size: 1.4rem; }
+  .trust-chips > li { font-size: .78rem; padding: 7px 12px; }
+  .disclaimer { font-size: .72rem; }
+  .section-head { margin-bottom: 30px; }
+  body { padding-bottom: 86px; }
+  .mobile-cta { padding: 13px 26px; font-size: .9rem; }
+}
+
+/* 320-420px: security — yahan cards ko ek column me force kiya gaya hai.
+   Warna card ki minimum width (330px) screen se badi ho jati thi aur page
+   side me scroll hone lagta tha (purane 320px phones par asli bug). */
+@media (max-width: 420px) {
+  .packages, .pay-info-grid { grid-template-columns: 1fr; }
+  h1 { font-size: 1.95rem; }
+  h2 { font-size: 1.6rem; }
+  .btn { padding: 12px 16px; font-size: .9rem; }
+  .upi-app { font-size: .78rem; padding: 10px 6px; }
+  .mobile-cta { padding: 12px 22px; font-size: .88rem; }
+  .qr-box img { width: 150px; }
+  .footer-bottom { padding: 18px 0 26px; }
+  .hero-badge-text b { font-size: .95rem; }
+  .hero-badge-text small { font-size: .72rem; }
+}
+
+.noscript-note { max-width: 560px; margin-left: auto; margin-right: auto; text-align: center; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }

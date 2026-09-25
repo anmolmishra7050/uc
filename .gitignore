@@ -1,0 +1,25 @@
+# ---------------------------------------------------------------------
+# UCBAZZAR — .gitignore
+#
+# Site deploy ke liye kaun si files jati hain wo .github/workflows/deploy.yml
+# me whitelist se decide hota hai (index.html, assets/, robots.txt,
+# sitemap.xml, CNAME, .nojekyll). Ye file sirf junk ko repo se bahar rakhti
+# hai taki commit history saaf rahe.
+# ---------------------------------------------------------------------
+
+# Codebuff / agent tooling (site ka hissa nahi)
+.freebuff/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs / temporary
+*.log
+*.tmp
