@@ -68,7 +68,7 @@ const BASE_REVIEWS = [
 const $ = (sel) => document.querySelector(sel);
 const money = (n) => '₹' + Number(n).toLocaleString('en-IN');
 
-const state = { game: null, pack: null, playerId: '', server: 'India' };
+const state = { game: null, pack: null, playerId: '', server: 'India', orderRef: null };
 
 /* --------------------------------------------------------------------------
    Render: games + packages
@@ -184,11 +184,35 @@ function validatePlayerId(showToast) {
 /* --------------------------------------------------------------------------
    Payment modal
    -------------------------------------------------------------------------- */
+/* Short order reference that travels inside the UPI payment note, so the payment
+   you see in your UPI app matches the exact order in the customer's Payment History.
+   Letters that look like numbers (O/0, I/1) are skipped on purpose. */
+function newOrderRef() {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for (let i = 0; i < 5; i++) s += alphabet[Math.floor(Math.random() * alphabet.length)];
+  return 'UCB' + s;
+}
+
+/* "2560 UC" -> "2560UC", "7800 Diamond" -> "7800D" (UPI notes allow ~50 chars) */
+function packLabel(pack) {
+  if (!pack) return '';
+  return pack.name.replace(/\s+/g, '').replace(/Diamonds?/i, 'D');
+}
+
+/* The note the customer's UPI app sends with the payment. It carries everything
+   needed to deliver: game brand, package, Free Fire server, player ID and order ref. */
+function upiNote() {
+  const game = state.game ? GAMES[state.game] : null;
+  const server = game && game.hasServer ? state.server : '';
+  return ['UCBAZZAR', packLabel(state.pack), server, state.playerId, state.orderRef]
+    .filter(Boolean).join(' ').slice(0, 50);
+}
+
 function buildUpiParams() {
   const amount = state.pack ? state.pack.price : 0;
-  const note = `${STORE.name} ${state.pack ? state.pack.name : ''} ${state.playerId}`.trim();
   const q = (v) => encodeURIComponent(v);
-  return `pa=${q(STORE.upiId)}&pn=${q(STORE.payeeName)}&am=${amount}&cu=INR&tn=${q(note)}`;
+  return `pa=${q(STORE.upiId)}&pn=${q(STORE.payeeName)}&am=${amount}&cu=INR&tn=${q(upiNote())}`;
 }
 
 function openModal() {
@@ -199,6 +223,10 @@ function openModal() {
   }
   if (!state.pack) return toast('Please select a package.', true);
 
+  // one reference per order attempt — it goes into the payment note and becomes
+  // the order ID the customer sees in Payment History
+  if (!state.orderRef) state.orderRef = newOrderRef();
+
   const game = GAMES[state.game];
   const params = buildUpiParams();
   const upiUri = 'upi://pay?' + params;
@@ -207,6 +235,8 @@ function openModal() {
   $('#payPack').textContent = state.pack.name;
   $('#payAmount').textContent = money(state.pack.price);
   $('#upiIdText').textContent = STORE.upiId;
+  $('#payNote').textContent = upiNote();
+  $('#payRef').textContent = state.orderRef;
   $('#qrAmountNote').textContent = money(state.pack.price);
   $('#qrFallbackText').textContent = STORE.upiId + ' | ' + money(state.pack.price) + ' | order: ' + state.playerId;
 
@@ -275,10 +305,12 @@ function closeVerifyPopup() {
 
 function sendOrder() {
   const game = GAMES[state.game];
+  // same reference the customer paid with, so the UPI note and this record match
+  const ref = state.orderRef || newOrderRef();
 
   // Payment record: Verifying for STORE.verifyMinutes, then Failed (see payment-history.js)
   const payment = window.PaymentHistory.add({
-    id: 'UCB' + Date.now().toString(36).toUpperCase(),
+    id: ref,
     game: game.name,
     pack: state.pack.name,
     amount: state.pack.price,
@@ -288,6 +320,7 @@ function sendOrder() {
     status: 'Verifying',
   });
 
+  state.orderRef = null; // next order gets a fresh reference
   closeModal();
   // track it on the dedicated history page (no email is sent)
   window.location.href = 'history.html?paid=' + payment.id;

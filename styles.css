@@ -428,6 +428,13 @@ select.input { appearance: none; cursor: pointer; }
 .app-btn:hover { border-color: var(--line-strong); box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.22); }
 .app-btn:active { transform: scale(0.98); }
 
+/* payment note line inside the payment modal */
+.pay-note-line {
+  text-align: center; font-size: 12.8px; font-weight: 700;
+  color: var(--muted); margin: 10px 0 4px; word-break: break-word;
+}
+.pay-note-line b { color: var(--gold-1); font-weight: 800; }
+
 /* ==================== PLAYER ID VERIFY POPUP ==================== */
 /* this popup sits in the exact middle of the screen (payment modal stays top) */
 #verifyModal.open {

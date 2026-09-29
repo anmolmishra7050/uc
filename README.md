@@ -83,41 +83,43 @@ UCBAZZAR.clear()                    // history saaf karein
 
 History localStorage me rehti hai (per device). Dusre device par woh customer apni history nahi dekhega.
 
-## 6. Deploy (GitHub Pages) — `anmolmishra7050/uc`
+## 6. Deploy — repo `anmolmishra7050/uc` (live site: `ucbazzar.in`)
 
-Zaroori baat: is waqt jo GitHub repo hai usme **purani site** (24 Sep wali `index.html` + `assets/`)
-padi hai, aur us repo ka root tumhare Windows home folder par set hai.
-Isliye deploy **fresh clone** se karo (home folder me `git add -A` **kabhi mat chalao** —
-wo tumhare poore home folder ko repo me daal dega):
+Aapki live site is repo ke **`main` branch** se chalti hai (Cloudflare ke peeche, push par khud deploy
+hota hai). Repo me is waqt ye poori site maujood hai, is liye deploy ka sabse safe tarika hai
+**fresh clone → files copy → commit → push** (ghar wale home folder me `git add -A` **kabhi na chalao**,
+wo aapka poora home folder repo me daal dega):
 
 ```bash
-# 1. repo ka saaf clone (home folder ke andar nahi)
+# 1. repo ka saaf clone (home folder ke bahar)
 cd /c/Users/anmol/Desktop
-git clone git@github.com:anmolmishra7050/uc.git ucbazzar-live
+git clone https://github.com/anmolmishra7050/uc.git ucbazzar-live
 cd ucbazzar-live
 
-# 2. purani site hatao (sirf .git bacha ke)
-find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+# 2. is folder ki latest files copy karo (.freebuff aur .github ko chhod kar)
+SRC="/c/Users/anmol/OneDrive/Desktop/UCBAZZAR 2.0"
+cp -f "$SRC"/*.html "$SRC"/*.js "$SRC"/*.css "$SRC"/*.md "$SRC"/*.txt "$SRC"/*.xml "$SRC"/favicon.ico "$SRC"/.nojekyll .
+cp -rf "$SRC"/Assests/. ./Assests/
 
-# 3. nayi site copy karo
-cp -r "/c/Users/anmol/OneDrive/Desktop/UCBAZZAR 2.0/." .
-
-# 4. commit + push -> site live
+# 3. commit + push -> site live (1-2 minute me deploy ho jaata hai)
 git add -A
-git commit -m "Replace with new UC BAZZAR storefront"
+git commit -m "Update site"
 git push origin main
 ```
 
-Uske baad ek hi baar: repo **Settings → Pages → Source = GitHub Actions**.
-Live link: `https://anmolmishra7050.github.io/uc/`
+Deploy ke baad check karein: `https://ucbazzar.in/` (naya title), `/favicon.ico`, `/Assests/og-image.png`,
+`/sitemap.xml` — sab 200 dene chahiye.
 
-Workflow `.github/workflows/deploy.yml` already included hai (push par khud deploy hota hai).
-Purana duplicate workflow (`static.yml`) aur `assets/` folder clone step 2 me hat jaate hain — unki
-zarurat nahi. `.nojekyll` bhi included hai. Custom domain ke liye: Settings → Pages → Custom domain.
+Note: Cloudflare pages ko **clean URL** pasand hai — `/about.html` 307 hokar `/about` par chala jaata hai.
+Dono URL kaam karte hain, is liye links waise hi rakhe hain (aur agar host badla to bhi tootenge nahi).
 
-**Warning:** home folder wale purane git repo (`C:\Users\anmol\.git`) me purani site ab bhi tracked
-hai. Deploy ke baad wahan koi git command chalane ki zarurat nahi — chaaho to us `.git` folder ko
-rename kar do, taaki future me koi confusion na ho.
+Git identity: is machine par global git config set nahi hai — commit karte waqt ye chalayein:
+
+```bash
+GIT_AUTHOR_NAME="anmolmi7890-dot" GIT_AUTHOR_EMAIL="anmolmi7890@gmail.com" \
+GIT_COMMITTER_NAME="anmolmi7890-dot" GIT_COMMITTER_EMAIL="anmolmi7890@gmail.com" \
+git commit -m "Update site"
+```
 
 Doosre hosts: **Netlify / Cloudflare Pages / Vercel** — folder drag & drop karein, build command
 ki zarurat nahi. Shared hosting par files `public_html` me upload kar dein.
