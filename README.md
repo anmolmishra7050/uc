@@ -137,7 +137,27 @@ ki zarurat nahi. Shared hosting par files `public_html` me upload kar dein.
 | `Assests/` | Logo, game art, UC / diamond icons, GPay / PhonePe / Paytm / UPI icons |
 | `.github/workflows/deploy.yml` | GitHub Pages auto-deploy (push par chalta hai) |
 
-## 8. About Us page ki details badalna
+## 8. Google / social media par dikhne wali cheezein
+
+- **Title + description** (Google result me yahi dikhta hai) har page ke `<head>` me hain. Title **60 characters**
+  se kam aur description **~155 characters** se kam rakhein, warna Google "..." laga kar kaat deta hai.
+- **Canonical** tag har page par hai (`https://ucbazzar.in/...`) taaki `github.io` ya `www` wali copies
+  Google ke liye duplicate na banein.
+- **Link preview (WhatsApp / Instagram / Facebook / Telegram)**: `Assests/og-image.png` (1200x630) use hoti hai,
+  aur `og:image`, `og:title`, `og:description`, `twitter:card` tags har page par lage hain. Logo ya text
+  badalna ho to `_makeog.ps1` jaisa script chala kar image dobara generate kar lein (ya naya 1200x630 PNG
+  `Assests/og-image.png` naam se rakh dein) — filename same rakhna zaroori hai.
+- **Favicon**: Google ke liye favicon **square** aur **48 ka multiple** hona chahiye (48, 96, 144, 192...).
+  Isliye PNG icons bana diye hain — `Assests/favicon-48.png`, `favicon-96.png`, `favicon-144.png`,
+  `favicon-192.png`, plus root me `favicon.ico` (browsers + Google dono ise dhundhte hain) aur
+  `Assests/apple-touch-icon.png` (home-screen icon). Saare pages me `rel="icon"` links lage hain.
+  Google ke result me icon aane me kuch din lagte hain; Search Console me "Request indexing" se jaldi hota hai.
+- **Logo badla?** To `Assests/og-image.png` (1200x630) aur favicon files dobara generate karni padengi —
+  original logo `Assests/uc_bazzar_logo.jpg` (1254x1254) hai, usse resize karke same filenames se save kar dein.
+- **Link preview update nahi ho raha?** WhatsApp/Facebook purana preview cache kar lete hain. Facebook
+  Sharing Debugger par URL daal kar "Scrape Again" karein, ya link ke aage `?v=2` laga kar ek baar share karein.
+
+## 9. About Us page ki details badalna
 
 `about.html` me store ki story, address, working hours aur "quick facts" likhe huye hain.
 Abhi **address aur joining year placeholder hain** (`Shop 12, Golden Plaza, Sector 17, Vashi, Navi Mumbai`
@@ -147,6 +167,6 @@ and `2023`) — apna asli address, apni city aur sahi saal daal dein. Yahi file 
 About Us link homepage ke nav me sabse aakhir me hai (Home · Top Up · History · FAQ · Contact · About Us),
 footer ke Quick Links me bhi, aur baaki saare pages ke footer me bhi.
 
-## 9. Zaroori note
+## 10. Zaroori note
 
 Hum game publisher (Krafton / Garena) ke official partner nahi hain — policy pages me yeh clearly likha hua hai.
