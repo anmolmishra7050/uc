@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>UC BAZZAR — Buy BGMI UC & Free Fire Diamonds Instantly</title>
+<meta name="description" content="UC BAZZAR — India's fast and secure game top-up store. Buy BGMI UC and Free Fire MAX Diamonds instantly with UPI, GPay, PhonePe and Paytm. Instant delivery, lowest prices, 24x7 support." />
+<meta name="theme-color" content="#07070a" />
+<link rel="icon" href="Assests/uc_bazzar_logo.jpg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body class="gradient-bg">
+
+<div class="bg-glow" aria-hidden="true"></div>
+
+<!-- ============ HEADER ============ -->
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="index.html">
+      <img class="brand-logo" src="Assests/uc_bazzar_logo.jpg" alt="UC BAZZAR logo" />
+      <span class="brand-name">UC <b>BAZZAR</b></span>
+    </a>
+
+    <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+
+    <nav class="site-nav" id="siteNav">
+      <a href="index.html">Home</a>
+      <a href="index.html#store">Top Up</a>
+      <a href="history.html">History</a>
+      <a href="faq.html">FAQ</a>
+      <a href="contact.html">Contact</a>
+      <a href="about.html">About Us</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <div class="wrap">
+      <img class="hero-logo" src="Assests/uc_bazzar_logo.jpg" alt="UC BAZZAR" />
+      <h1 class="hero-title">UC BAZZAR</h1>
+      <p class="hero-sub">Instant UC &amp; Diamonds Delivered</p>
+
+      <div class="badge-row">
+        <span class="pill">⚡ 100% Success Rate</span>
+        <span class="pill">🔒 Fast • Safe • Trusted</span>
+        <span class="pill">🚫 No Carding • No ID Ban</span>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><b id="statOrders">0</b><span>Orders Delivered</span></div>
+        <div class="stat"><b>2 min</b><span>Avg. Delivery</span></div>
+        <div class="stat"><b>4.7★</b><span>Player Rating</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STORE FLOW ============ -->
+  <section class="wrap" id="store">
+
+    <!-- Step 1 -->
+    <div class="card">
+      <h2 class="card-title">Select Game</h2>
+      <div class="game-grid" id="gameGrid"></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="card">
+      <h2 class="card-title">👤 Player Information</h2>
+
+      <label class="field-label" for="playerId">Player ID / UID</label>
+      <div class="id-field">
+        <input class="input" id="playerId" type="text" inputmode="numeric" autocomplete="off"
+               maxlength="12" placeholder="Enter or paste Player ID (e.g. 5123456789)" />
+        <button class="mini-btn paste-btn" id="pasteBtn" type="button">📋 Paste</button>
+      </div>
+
+      <div id="serverWrap" class="hidden">
+        <label class="field-label" for="server">Server / Region</label>
+        <select class="input" id="server">
+          <option value="India">India</option>
+          <option value="Global">Global</option>
+        </select>
+      </div>
+
+      <p class="note">🔒 We never ask for passwords / OTPs. Double-check your Player ID before paying.</p>
+      <button class="btn btn-ghost" id="verifyBtn" type="button">🔍 Verify Player ID</button>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="card">
+      <h2 class="card-title">🎁 Choose Package</h2>
+      <p class="game-hint" id="gameHint">Select a game above to see its packages.</p>
+      <div class="pack-grid" id="packGrid"></div>
+    </div>
+
+    <!-- Order summary -->
+    <div class="card summary" id="summary">
+      <div class="summary-head">
+        <span class="summary-game" id="sumGame">Game: —</span>
+        <span class="secure">🔒 Secure Payment</span>
+      </div>
+      <div class="summary-body">
+        <div>
+          <div class="muted">Package</div>
+          <div class="sum-pack" id="sumPack">—</div>
+          <div class="muted tiny" id="sumUid"></div>
+        </div>
+        <div class="sum-total-wrap">
+          <div class="muted">Total</div>
+          <div class="sum-total" id="sumTotal">₹0</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="payBtn" type="button" disabled>💳 PROCEED TO PAY</button>
+      <p class="foot-note">⚡ Instant delivery • 🔒 Secure payment</p>
+    </div>
+  </section>
+
+  <!-- ============ REVIEWS + FEEDBACK ============ -->
+  <section class="wrap section" id="reviews">
+    <h2 class="section-title">Player <span class="grad">Reviews</span></h2>
+
+    <!-- feedback form first -->
+    <div class="card feedback-card">
+      <h3>💬 Share Your Feedback</h3>
+      <div class="fb-row">
+        <input class="input" id="fbName" type="text" maxlength="30" autocomplete="off" placeholder="Your name (optional)" />
+        <div class="fb-stars" id="fbStars" role="radiogroup" aria-label="Your rating">
+          <label data-v="1"><input type="radio" name="fbStars" value="1" /><span>★</span></label>
+          <label data-v="2"><input type="radio" name="fbStars" value="2" /><span>★</span></label>
+          <label data-v="3"><input type="radio" name="fbStars" value="3" /><span>★</span></label>
+          <label data-v="4"><input type="radio" name="fbStars" value="4" /><span>★</span></label>
+          <label data-v="5" class="sel"><input type="radio" name="fbStars" value="5" checked /><span>★</span></label>
+        </div>
+      </div>
+      <textarea class="input" id="fbText" rows="2" maxlength="200" placeholder="Your Feedback"></textarea>
+      <button class="btn btn-ghost" id="fbSubmit" type="button">Submit Feedback</button>
+    </div>
+
+    <!-- horizontally scrolling review columns -->
+    <div class="reviews-scroller" id="reviewsScroller">
+      <div class="reviews-track" id="reviewsGrid"></div>
+    </div>
+  </section>
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <div class="footer-brand">
+      <img class="brand-logo" src="Assests/uc_bazzar_logo.jpg" alt="UC BAZZAR" />
+      <div>
+        <div class="brand-name">UC <b>BAZZAR</b></div>
+        <p class="muted">Fast &amp; secure game top-up service for BGMI and Free Fire MAX players in India.</p>
+      </div>
+    </div>
+
+    <div class="footer-col">
+      <h4>Quick Links</h4>
+      <a href="index.html#store">Top Up</a>
+      <a href="faq.html">FAQ</a>
+      <a href="contact.html">Contact Us</a>
+      <a href="about.html">About Us</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="refund.html">Refund &amp; Cancellation</a>
+    </div>
+
+    <div class="footer-col">
+      <h4>Reach Us</h4>
+      <a data-email data-email-text href="#">…</a>
+      <a href="contact.html">Order &amp; Refund Help</a>
+    </div>
+  </div>
+  <div class="wrap footer-bottom">
+    <span>© <span data-year>2026</span> UC BAZZAR. All rights reserved.</span>
+    <span class="tag-row"><em>🔒 Secure</em><em>⚡ Fast</em><em>⭐ Trusted</em></span>
+  </div>
+</footer>
+
+<!-- ============ PAYMENT MODAL ============ -->
+<div class="modal" id="payModal" aria-hidden="true">
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="payTitle">
+    <button class="modal-close" data-close aria-label="Close">✕</button>
+    <h3 id="payTitle" class="modal-title">Complete Your Payment</h3>
+
+    <div class="modal-summary">
+      <span id="payGame">—</span>
+      <span id="payPack" class="grad">—</span>
+      <span id="payAmount">₹0</span>
+    </div>
+
+    <div class="qr-box">
+      <img id="qrImg" alt="UPI QR code for this order" />
+      <div id="qrFallback" class="qr-fallback hidden">
+        <p>QR could not load. Copy the UPI ID below and pay from your UPI app:</p>
+        <code id="qrFallbackText"></code>
+      </div>
+    </div>
+
+    <p class="upi-line">
+      UPI ID: <b id="upiIdText">—</b>
+      <button class="mini-btn" id="copyUpi" type="button">Copy</button>
+    </p>
+
+    <p class="muted center">The amount is already filled in this QR — pay exactly <b id="qrAmountNote">₹0</b>.</p>
+
+    <div class="app-row">
+      <a class="app-btn" id="payGpay" href="#"><img src="Assests/Google-pay.webp" alt="" /><span>GPay</span></a>
+      <a class="app-btn" id="payPhonepe" href="#"><img src="Assests/phonepe.webp" alt="" /><span>PhonePe</span></a>
+      <a class="app-btn" id="payPaytm" href="#"><img src="Assests/paytm.webp" alt="" /><span>Paytm</span></a>
+      <a class="app-btn" id="payUpi" href="#"><img src="Assests/upi.webp" alt="" /><span>BHIM UPI</span></a>
+    </div>
+    <p class="muted center tiny">On mobile these buttons open the app with the amount pre-filled. On desktop, scan the QR above.</p>
+
+    <button class="btn btn-primary" id="sendOrderBtn" type="button">✅ I Have Paid</button>
+    <p class="muted center tiny">Orders are delivered within 2–10 minutes of payment confirmation.</p>
+  </div>
+</div>
+
+<!-- ============ PLAYER ID VERIFY POPUP ============ -->
+<div class="modal" id="verifyModal" aria-hidden="true">
+  <div class="modal-backdrop" data-vclose></div>
+  <div class="modal-card verify-card" role="dialog" aria-modal="true" aria-labelledby="verifyTitle">
+    <button class="modal-close" data-vclose aria-label="Close">✕</button>
+    <div class="verify-ico" id="verifyIco">✅</div>
+    <h3 class="verify-title" id="verifyTitle">Player ID Verified</h3>
+    <p class="verify-msg" id="verifyMsg"></p>
+    <button class="btn btn-primary" id="verifyOk" type="button">OK</button>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap" aria-live="polite"></div>
+
+<script src="config.js"></script>
+<script src="payment-history.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
