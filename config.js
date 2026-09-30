@@ -6,7 +6,7 @@
 window.STORE = {
   name: 'UC BAZZAR',
   upiId: 'ucbazzar@airtel',        // ← your UPI ID (payments land here)
-  payeeName: 'UC BAZZAR',          // ← name shown inside the UPI app
+  payeeName: 'Madhu Kumari',       // ← bank-registered name shown inside the UPI app
   email: 'ucbazzar@gmail.com',     // ← all orders + support go here
   verifyMinutes: 10,               // ← payment "Verifying" duration before it shows Failed
 

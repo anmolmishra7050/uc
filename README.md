@@ -10,7 +10,7 @@ Sirf ek file edit karni hai: **`config.js`**
 window.STORE = {
   name: 'UC BAZZAR',
   upiId: 'ucbazzar@airtel',      // ← apna UPI ID (set ho chuka hai)
-  payeeName: 'UC BAZZAR',     // ← bank account holder name
+  payeeName: 'Madhu Kumari',  // ← bank-registered account holder name (UPI app me yahi dikhta hai)
   email: 'ucbazzar@gmail.com',   // ← orders + support isi email par
 
   // Homepage ka "Orders Delivered" counter — 0 se shuru hokar har ghante 7–15 badhta hai

@@ -219,7 +219,8 @@ function upiNote() {
 function buildUpiParams() {
   const amount = state.pack ? state.pack.price : 0;
   const q = (v) => encodeURIComponent(v);
-  return `pa=${q(STORE.upiId)}&pn=${q(STORE.payeeName)}&am=${amount}&cu=INR&tn=${q(upiNote())}`;
+  const pn = STORE.payeeName ? `&pn=${q(STORE.payeeName)}` : '';
+  return `pa=${q(STORE.upiId)}${pn}&am=${amount}&cu=INR&tn=${q(upiNote())}`;
 }
 
 function openModal() {
