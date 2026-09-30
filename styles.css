@@ -305,8 +305,10 @@ select.input { appearance: none; cursor: pointer; }
 .reviews-scroller {
   margin-top: 18px;
   /* space is reserved before script.js paints the cards — without this the
-     whole page below the reviews (footer included) jumps ~220px (CLS) */
-  min-height: 212px;
+     whole page below the reviews (footer included) jumps ~220px (CLS).
+     222px = tallest card (184) + track padding + scroller padding + scrollbar,
+     so the strip is exactly this tall at every screen width */
+  min-height: 222px;
   overflow-x: auto;
   /* no scroll-snap: it fights the continuous auto-scroll and jumps back */
   scroll-snap-type: none;
@@ -334,7 +336,6 @@ select.input { appearance: none; cursor: pointer; }
   /* clamp keeps card widths (and so card heights) steady on tablets where
      30% of a 768px screen used to squeeze the quotes into 5 lines */
   .reviews-track { grid-auto-columns: clamp(300px, 30vw, 360px); }
-  .reviews-scroller { min-height: 220px; }
 }
 
 .faq-item { padding: 0; overflow: hidden; }
