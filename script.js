@@ -264,14 +264,28 @@ function openModal() {
   const modal = $('#payModal');
   modal.classList.add('open');
   modal.setAttribute('aria-hidden', 'false');
-  document.body.style.overflow = 'hidden';
+  lockScroll();
 }
 
 function closeModal() {
   const modal = $('#payModal');
   modal.classList.remove('open');
   modal.setAttribute('aria-hidden', 'true');
+  unlockScroll();
+}
+
+/* Locking the page behind a modal takes the scrollbar away, which widens the
+   layout by ~17px and makes everything on screen jump sideways. Padding the
+   body by exactly the scrollbar width keeps the content perfectly still. */
+function lockScroll() {
+  const gap = window.innerWidth - document.documentElement.clientWidth;
+  document.body.style.overflow = 'hidden';
+  document.body.style.paddingRight = gap > 0 ? gap + 'px' : '';
+}
+
+function unlockScroll() {
   document.body.style.overflow = '';
+  document.body.style.paddingRight = '';
 }
 
 /* --------------------------------------------------------------------------
@@ -298,7 +312,7 @@ function showVerifyPopup(ok) {
   modal.classList.toggle('bad', !ok);
   modal.classList.add('open');
   modal.setAttribute('aria-hidden', 'false');
-  document.body.style.overflow = 'hidden';
+  lockScroll();
 }
 
 function closeVerifyPopup() {
@@ -306,7 +320,7 @@ function closeVerifyPopup() {
   if (!modal.classList.contains('open')) return;
   modal.classList.remove('open');
   modal.setAttribute('aria-hidden', 'true');
-  if (!$('#payModal').classList.contains('open')) document.body.style.overflow = '';
+  if (!$('#payModal').classList.contains('open')) unlockScroll();
 }
 
 function sendOrder() {
@@ -430,6 +444,16 @@ function startAutoScroll() {
     scroller.addEventListener('wheel', () => setTimeout(releaseSoon, 800), { passive: true });
   }
 
+  // the strip only needs to tick while it is actually in view: the old loop
+  // kept burning frames on low-end phones even while the customer was paying,
+  // which shows up in the analytics as slow INP on the PROCEED TO PAY button
+  if (!window.__revWatch && typeof IntersectionObserver === 'function') {
+    window.__revWatch = new IntersectionObserver((entries) => {
+      window.__revOffscreen = !entries[0].isIntersecting;
+    }, { rootMargin: '160px' });
+    window.__revWatch.observe(scroller);
+  }
+
   // ~55 px per second, based on real elapsed time so the speed stays the same
   // whether the browser runs this 60 times a second or throttles it in the
   // background (old phones included).
@@ -439,8 +463,11 @@ function startAutoScroll() {
     const dt = Math.min(250, now - window.__revLast);
     window.__revLast = now;
 
-    if (window.__revPaused || document.hidden) return;
+    if (window.__revPaused || window.__revOffscreen || document.hidden) return;
     if (Date.now() < window.__revHoldUntil) return;
+    // a modal on top means the customer is paying or verifying their ID — keep
+    // the main thread free while they interact
+    if ($('#payModal').classList.contains('open') || $('#verifyModal').classList.contains('open')) return;
 
     const track = $('#reviewsGrid');
     const half = window.__revHalf || (track ? Math.round(track.scrollWidth / 2) : 0);

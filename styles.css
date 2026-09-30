@@ -304,6 +304,9 @@ select.input { appearance: none; cursor: pointer; }
 /* horizontally scrolling review columns */
 .reviews-scroller {
   margin-top: 18px;
+  /* space is reserved before script.js paints the cards — without this the
+     whole page below the reviews (footer included) jumps ~220px (CLS) */
+  min-height: 212px;
   overflow-x: auto;
   /* no scroll-snap: it fights the continuous auto-scroll and jumps back */
   scroll-snap-type: none;
@@ -318,7 +321,7 @@ select.input { appearance: none; cursor: pointer; }
 .reviews-track {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: min(78vw, 320px);
+  grid-auto-columns: clamp(280px, 78vw, 320px);
   gap: 12px;
   padding: 4px 4px 8px;
 }
@@ -328,7 +331,10 @@ select.input { appearance: none; cursor: pointer; }
   margin: 0;
 }
 @media (min-width: 761px) {
-  .reviews-track { grid-auto-columns: min(360px, 30%); }
+  /* clamp keeps card widths (and so card heights) steady on tablets where
+     30% of a 768px screen used to squeeze the quotes into 5 lines */
+  .reviews-track { grid-auto-columns: clamp(300px, 30vw, 360px); }
+  .reviews-scroller { min-height: 220px; }
 }
 
 .faq-item { padding: 0; overflow: hidden; }

@@ -18,6 +18,20 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="styles.css" />
+<!-- Reserve the order-list height before the first paint: the list is rendered
+     by script at the end of the body, and without this the page (footer too)
+     jumps down when the saved orders appear. Key must match payment-history.js. -->
+<script>
+  try {
+    var savedPayments = JSON.parse(localStorage.getItem('ucbazzar_payments_v1') || '[]');
+    var savedCount = Array.isArray(savedPayments) ? savedPayments.length : 0;
+    if (savedCount > 0) {
+      var reserveStyle = document.createElement('style');
+      reserveStyle.textContent = '#historyList{min-height:' + (savedCount * 222) + 'px}';
+      document.head.appendChild(reserveStyle);
+    }
+  } catch (e) { /* localStorage blocked — nothing to reserve */ }
+</script>
 </head>
 <body class="gradient-bg">
 
