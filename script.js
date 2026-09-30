@@ -15,7 +15,7 @@ const GAMES = {
     tag: 'Official Seller',
     img: 'Assests/bgmi.jpg',
     packImg: 'Assests/uc.jpg',
-    hasServer: false,
+    idLabel: 'BGMI Player ID / UID',
     idHint: 'BGMI UID (8–12 digit)',
     packages: [
       { id: 'uc720',  name: '720 UC',   price: 199,  tag: 'ELITE PASS SPECIAL' },
@@ -32,7 +32,7 @@ const GAMES = {
     tag: 'Official Seller',
     img: 'Assests/freefire.jpg',
     packImg: 'Assests/1624892361684-0495b49d-93e8-4bdc-98a8-d2d2d87b84a8-removebg-preview.png',
-    hasServer: true,
+    idLabel: 'Free Fire Player ID / UID',
     idHint: 'Free Fire UID (8–12 digit)',
     packages: [
       { id: 'ff2400',  name: '2400 Diamond',  price: 379,  tag: 'POPULAR' },
@@ -68,7 +68,7 @@ const BASE_REVIEWS = [
 const $ = (sel) => document.querySelector(sel);
 const money = (n) => '₹' + Number(n).toLocaleString('en-IN');
 
-const state = { game: null, pack: null, playerId: '', server: 'India', orderRef: null };
+const state = { game: null, pack: null, playerId: '', orderRef: null };
 
 /* --------------------------------------------------------------------------
    Render: games + packages
@@ -121,7 +121,7 @@ function selectGame(id) {
   state.game = id;
   state.pack = null;
   const game = GAMES[id];
-  $('#serverWrap').classList.toggle('hidden', !game.hasServer);
+  $('#playerIdLabel').textContent = game.idLabel;
   $('#playerId').placeholder = 'Enter ' + game.idHint;
   renderGames();
   renderPackages();
@@ -201,11 +201,9 @@ function packLabel(pack) {
 }
 
 /* The note the customer's UPI app sends with the payment. It carries everything
-   needed to deliver: game brand, package, Free Fire server, player ID and order ref. */
+   needed to deliver: game brand, package, player ID and order ref. */
 function upiNote() {
-  const game = state.game ? GAMES[state.game] : null;
-  const server = game && game.hasServer ? state.server : '';
-  return ['UCBAZZAR', packLabel(state.pack), server, state.playerId, state.orderRef]
+  return ['UCBAZZAR', packLabel(state.pack), state.playerId, state.orderRef]
     .filter(Boolean).join(' ').slice(0, 50);
 }
 
@@ -315,7 +313,6 @@ function sendOrder() {
     pack: state.pack.name,
     amount: state.pack.price,
     playerId: state.playerId,
-    server: game.hasServer ? state.server : null,
     paidAt: Date.now(),
     status: 'Verifying',
   });
@@ -596,7 +593,6 @@ function init() {
     }
   });
 
-  $('#server').addEventListener('change', (e) => { state.server = e.target.value; });
   $('#verifyBtn').addEventListener('click', () => {
     showVerifyPopup(validatePlayerId(false));
   });

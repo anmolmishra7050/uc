@@ -89,19 +89,11 @@
     <div class="card">
       <h2 class="card-title">👤 Player Information</h2>
 
-      <label class="field-label" for="playerId">Player ID / UID</label>
+      <label class="field-label" id="playerIdLabel" for="playerId">Player ID / UID</label>
       <div class="id-field">
         <input class="input" id="playerId" type="text" inputmode="numeric" autocomplete="off"
                maxlength="12" placeholder="Enter or paste Player ID (e.g. 5123456789)" />
         <button class="mini-btn paste-btn" id="pasteBtn" type="button">📋 Paste</button>
-      </div>
-
-      <div id="serverWrap" class="hidden">
-        <label class="field-label" for="server">Server / Region</label>
-        <select class="input" id="server">
-          <option value="India">India</option>
-          <option value="Global">Global</option>
-        </select>
       </div>
 
       <p class="note">🔒 We never ask for passwords / OTPs. Double-check your Player ID before paying.</p>
