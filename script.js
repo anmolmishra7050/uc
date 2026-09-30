@@ -41,9 +41,6 @@ const GAMES = {
       { id: 'ff7780',  name: '7780 Diamond',  price: 899 },
       { id: 'ff8600',  name: '8600 Diamond',  price: 999,  tag: 'BEST VALUE' },
       { id: 'ff10500', name: '10500 Diamond', price: 1249 },
-      { id: 'ff14500', name: '14500 Diamond', price: 1649 },
-      { id: 'ff21000', name: '21000 Diamond', price: 2099 },
-      { id: 'ff32000', name: '32000 Diamond', price: 2599 },
     ],
   },
 };
@@ -53,16 +50,28 @@ const GAMES = {
    visible ones rotate on every visit, so reviews "keep changing".
    -------------------------------------------------------------------------- */
 const BASE_REVIEWS = [
-  { name: 'Rohit Sharma',      stars: 5, source: 'Instagram', text: 'UC aaya sirf 3 minute me aur price bhi theek tha. Ordering process simple laga.' },
-  { name: 'Ayesha K.',         stars: 5, source: 'YouTube',   text: 'Diamonds instantly credit ho gaye, support ne turant reply kiya. Fully satisfied.' },
-  { name: 'Karan Singh',       stars: 5, source: 'WhatsApp',  text: '5 baar order kiya hai, har baar delivery time par mili. Ab yahin se order karta hoon.' },
-  { name: 'Sneha D.',          stars: 4, source: 'Instagram', text: 'Delivery fast thi, bas peak hours me thoda wait karna pada. Overall accha experience raha.' },
-  { name: 'Vikas Chauhan',     stars: 5, source: 'Telegram',  text: 'Elite pass wala 720 UC pack best deal tha. QR se payment karna easy laga.' },
-  { name: 'Arjun Mehta',       stars: 5, source: 'YouTube',   text: 'GPay se pay kiya, 2 min me UC account me tha. Site use karna smooth hai.' },
-  { name: 'Pooja Verma',       stars: 4, source: 'Telegram',  text: 'Free Fire diamonds ka price theek mila, support bhi helpful raha.' },
-  { name: 'Manish K.',         stars: 5, source: 'WhatsApp',  text: 'Pehle online UC lene me doubt tha, par yahan se aaram se mil gaya. Process clear hai.' },
-  { name: 'Rahul T.',          stars: 5, source: 'Instagram', text: '8100 UC liya aur delivery instant thi. Package options acche hain.' },
-  { name: 'Anjali Gupta',      stars: 5, source: 'YouTube',   text: 'Step by step simple process hai — ID daalo, package chuno, pay karo, done.' },
+  { name: 'Rohit Sharma',      stars: 5, source: 'Instagram', text: 'UC aaya sirf 3 minute me, price bhi sahi tha.' },
+  { name: 'Ayesha K.',         stars: 5, source: 'YouTube',   text: 'Diamonds instantly credit ho gaye. Support ne bhi turant reply kiya.' },
+  { name: 'Karan Singh',       stars: 5, source: 'WhatsApp',  text: '5 baar order kiya, har baar time pe delivery. Ab yahin se lunga.' },
+  { name: 'Sneha D.',          stars: 4, source: 'Instagram', text: 'Delivery fast thi, bas evening rush me 15 min wait karna pada.' },
+  { name: 'Vikas Chauhan',     stars: 5, source: 'Telegram',  text: '720 UC pack best deal tha. QR se pay karna easy laga.' },
+  { name: 'Arjun Mehta',       stars: 5, source: 'YouTube',   text: 'GPay se pay kiya, 2 min me UC account me tha.' },
+  { name: 'Pooja Verma',       stars: 4, source: 'Telegram',  text: 'Free Fire diamonds ka price theek mila, support helpful tha.' },
+  { name: 'Manish K.',         stars: 5, source: 'WhatsApp',  text: 'Pehle doubt tha, par yahan se aaram se mil gaya. Process clear hai.' },
+  { name: 'Rahul T.',          stars: 5, source: 'Instagram', text: '8100 UC liya, delivery instant. Package options acche hain.' },
+  { name: 'Anjali Gupta',      stars: 5, source: 'YouTube',   text: 'ID daalo, package chuno, pay karo — bas itna hi karna hai.' },
+  { name: 'Nikhil R.',         stars: 5, source: 'Instagram', text: '1080 UC liya, 4 min me aa gaya. PhonePe se pay kiya.' },
+  { name: 'Sameer Khan',       stars: 5, source: 'WhatsApp',  text: 'Isse fast kahin nahi mila bhai. 3 min me diamonds.' },
+  { name: 'Deepak Yadav',      stars: 5, source: 'YouTube',   text: 'Pehli baar doubt tha, par ID verify karke confirm kiya. Trust ban gaya.' },
+  { name: 'Ritu S.',           stars: 4, source: 'Telegram',  text: '2280 UC ka price kam tha. Delivery bhi theek.' },
+  { name: 'Aditya Nair',       stars: 5, source: 'Instagram', text: 'Ordered at 1am, still got the UC in 5 minutes.' },
+  { name: 'Tanmay Joshi',      stars: 5, source: 'YouTube',   text: 'No login drama. Paid via UPI, UC credited in 4 mins.' },
+  { name: 'Farhan A.',         stars: 4, source: 'WhatsApp',  text: 'Prices are fair, just had to wait ~15 min in the evening.' },
+  { name: 'Ritika Bansal',     stars: 5, source: 'Telegram',  text: 'Third order here. Zero issues so far.' },
+  { name: 'Priya N.',          stars: 5, source: 'WhatsApp',  text: '560 diamonds 2 min me credit. Ab to yahin se lungi.' },
+  { name: 'Harsh Vardhan',     stars: 5, source: 'YouTube',   text: 'Payment ke baad screenshot bheja, 5 min me order done.' },
+  { name: 'Aakash Dubey',      stars: 5, source: 'Telegram',  text: 'Genuine hai, do order kar chuka hoon. Koi issue nahi.' },
+  { name: 'Mohit Saxena',      stars: 4, source: 'Instagram', text: 'Weekend pe thoda late hua par UC mil gaya. Price ka issue nahi.' },
 ];
 
 const $ = (sel) => document.querySelector(sel);
@@ -233,8 +242,6 @@ function openModal() {
   $('#payPack').textContent = state.pack.name;
   $('#payAmount').textContent = money(state.pack.price);
   $('#upiIdText').textContent = STORE.upiId;
-  $('#payNote').textContent = upiNote();
-  $('#payRef').textContent = state.orderRef;
   $('#qrAmountNote').textContent = money(state.pack.price);
   $('#qrFallbackText').textContent = STORE.upiId + ' | ' + money(state.pack.price) + ' | order: ' + state.playerId;
 

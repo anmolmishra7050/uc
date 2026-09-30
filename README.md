@@ -55,6 +55,8 @@ Ya `index.html` ko seedha browser me khol lein (assets relative path se load hot
      **❌ Player ID Not Verified** with the exact reason ("you entered 4 digits — needs at least 8").
 2. **PROCEED TO PAY** par UPI QR khulta hai — QR me amount **auto-filled** hota hai
    (`upi://pay?pa=...&am=<price>&cu=INR&tn=...`).
+   Ye `tn=` wala order note aur order ID customer ko modal me **dikhta nahi** hai (wo internal tracking
+   ke liye hai) — UPI app aur Payment History me phir bhi chala jaata hai.
 3. Direct app buttons (icons `Assests/` se): **GPay** (`tez://`), **PhonePe** (`phonepe://`),
    **Paytm** (`paytmmp://`), **BHIM UPI** (`upi://`). Mobile par ye app khol dete hain, desktop par QR scan.
 4. Payment ke baad customer **“✅ I Have Paid”** dabata hai — koi email nahi kholta. Uski entry seedha
