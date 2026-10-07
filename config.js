@@ -11,12 +11,13 @@ window.STORE = {
   verifyMinutes: 10,               // ← payment "Verifying" duration before it shows Failed
 
   /* "Orders Delivered" counter on the homepage.
-     base      = orders already delivered on startDate (1260 = counter starts from 1260)
-     startDate = jis din se count chalu ho (aaj ki date)
+     base      = counter ka aaj ka number (1200 = 1,200 orders delivered)
+     startDate = is waqt se counter badhna shuru kare — sirf din ('2026-10-07') ya din + time
+                 ('2026-10-07T09:00:00') dono chalte hain
      perHourMin/Max = how many orders are added EVERY HOUR (7–15) */
   orders: {
-    base: 1260,
-    startDate: '2026-09-29',
+    base: 1200,
+    startDate: '2026-10-07T09:00:00',
     perHourMin: 7,
     perHourMax: 15,
   },

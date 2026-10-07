@@ -357,8 +357,9 @@ function renderOrderStats() {
   const startOfHour = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours());
   const hourMs = 3600000;
   const now = new Date();
-  const start = new Date(cfg.startDate + 'T00:00:00');
-  const fullHours = Math.max(0, Math.round((startOfHour(now) - start) / hourMs));
+  // startDate can be a plain day ('2026-10-07') or a day + time ('2026-10-07T09:00:00')
+  const start = new Date(/T/.test(cfg.startDate) ? cfg.startDate : cfg.startDate + 'T00:00:00');
+  const fullHours = Math.max(0, Math.floor((startOfHour(now) - startOfHour(start)) / hourMs));
 
   // same number for everyone during the same hour, but it changes every hour
   const ordersOfHour = (i) => {
@@ -370,7 +371,7 @@ function renderOrderStats() {
   for (let i = 0; i < fullHours; i++) total += ordersOfHour(i);
 
   // running count inside the current hour, so it ticks up gradually
-  const minutesThisHour = (now - startOfHour(now)) / 60000;
+  const minutesThisHour = Math.max(0, (now - (fullHours === 0 ? start : startOfHour(now))) / 60000);
   const doneThisHour = Math.round(ordersOfHour(fullHours) * Math.min(1, minutesThisHour / 60));
 
   $('#statOrders').textContent = (total + doneThisHour).toLocaleString('en-IN');
