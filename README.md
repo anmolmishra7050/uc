@@ -28,8 +28,8 @@ window.STORE = {
 
 Homepage par jo number dikhta hai woh `config.js` ke `orders` se banta hai:
 
-- `base` — startDate par kitne orders the. Abhi **0** hai, yaani counter zero se shuru hota hai.
-- `startDate` — jis din se count chalu ho. Abhi aaj ki date (`2026-09-29`) hai, isliye raat 12 baje counter 0 hota hai.
+- `base` — startDate par kitne orders the. Abhi **1260** hai, yaani counter 1260 se shuru hota hai.
+- `startDate` — jis din se count chalu ho. Abhi `2026-09-29` hai, isliye counter us din ke base se aage badhta hai.
 - `perHourMin` / `perHourMax` — **har ghante** kitne orders add honge (7–15).
 
 Number har ghante apne aap badhta hai aur ghante ke andar bhi halka-halka tick karta dikhta hai. Koi

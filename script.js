@@ -35,12 +35,12 @@ const GAMES = {
     idLabel: 'Free Fire Player ID / UID',
     idHint: 'Free Fire UID (8–12 digit)',
     packages: [
-      { id: 'ff2400',  name: '2400 Diamond',  price: 379,  tag: 'POPULAR' },
-      { id: 'ff3800',  name: '3800 Diamond',  price: 549 },
-      { id: 'ff5200',  name: '5200 Diamond',  price: 749 },
-      { id: 'ff7780',  name: '7780 Diamond',  price: 899 },
-      { id: 'ff8600',  name: '8600 Diamond',  price: 999,  tag: 'BEST VALUE' },
-      { id: 'ff10500', name: '10500 Diamond', price: 1249 },
+      { id: 'ff1060',  name: '1060 Diamond',  price: 199,  tag: 'POPULAR' },
+      { id: 'ff2180',  name: '2180 Diamond',  price: 349 },
+      { id: 'ff3840',  name: '3840 Diamond',  price: 499 },
+      { id: 'ff5600',  name: '5,600 Diamond', price: 679,  tag: 'BEST VALUE' },
+      { id: 'ff7360',  name: '7,360 Diamond', price: 800 },
+      { id: 'ff9650',  name: '9650 Diamond',  price: 1049 },
     ],
   },
 };
