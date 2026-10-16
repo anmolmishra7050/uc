@@ -26,23 +26,6 @@ const GAMES = {
       { id: 'uc8100', name: '8100 UC',  price: 1299, tag: 'BEST VALUE' },
     ],
   },
-  freefire: {
-    id: 'freefire',
-    name: 'Free Fire MAX',
-    tag: 'Official Seller',
-    img: 'Assests/freefire.jpg',
-    packImg: 'Assests/1624892361684-0495b49d-93e8-4bdc-98a8-d2d2d87b84a8-removebg-preview.png',
-    idLabel: 'Free Fire Player ID / UID',
-    idHint: 'Free Fire UID (8–12 digit)',
-    packages: [
-      { id: 'ff1060',  name: '1060 Diamond',  price: 199,  tag: 'POPULAR' },
-      { id: 'ff2180',  name: '2180 Diamond',  price: 349 },
-      { id: 'ff3840',  name: '3840 Diamond',  price: 499 },
-      { id: 'ff5600',  name: '5,600 Diamond', price: 679,  tag: 'BEST VALUE' },
-      { id: 'ff7360',  name: '7,360 Diamond', price: 800 },
-      { id: 'ff9650',  name: '9650 Diamond',  price: 1049 },
-    ],
-  },
 };
 
 /* --------------------------------------------------------------------------
@@ -51,24 +34,24 @@ const GAMES = {
    -------------------------------------------------------------------------- */
 const BASE_REVIEWS = [
   { name: 'Rohit Sharma',      stars: 5, source: 'Instagram', text: 'UC aaya sirf 3 minute me, price bhi sahi tha.' },
-  { name: 'Ayesha K.',         stars: 5, source: 'YouTube',   text: 'Diamonds instantly credit ho gaye. Support ne bhi turant reply kiya.' },
+  { name: 'Ayesha K.',         stars: 5, source: 'YouTube',   text: 'UC instantly credit ho gaya. Support ne bhi turant reply kiya.' },
   { name: 'Karan Singh',       stars: 5, source: 'WhatsApp',  text: '5 baar order kiya, har baar time pe delivery. Ab yahin se lunga.' },
   { name: 'Sneha D.',          stars: 4, source: 'Instagram', text: 'Delivery fast thi, bas evening rush me 15 min wait karna pada.' },
   { name: 'Vikas Chauhan',     stars: 5, source: 'Telegram',  text: '720 UC pack best deal tha. QR se pay karna easy laga.' },
   { name: 'Arjun Mehta',       stars: 5, source: 'YouTube',   text: 'GPay se pay kiya, 2 min me UC account me tha.' },
-  { name: 'Pooja Verma',       stars: 4, source: 'Telegram',  text: 'Free Fire diamonds ka price theek mila, support helpful tha.' },
+  { name: 'Pooja Verma',       stars: 4, source: 'Telegram',  text: '2560 UC ka price theek mila, support bhi helpful tha.' },
   { name: 'Manish K.',         stars: 5, source: 'WhatsApp',  text: 'Pehle doubt tha, par yahan se aaram se mil gaya. Process clear hai.' },
   { name: 'Rahul T.',          stars: 5, source: 'Instagram', text: '8100 UC liya, delivery instant. Package options acche hain.' },
   { name: 'Anjali Gupta',      stars: 5, source: 'YouTube',   text: 'ID daalo, package chuno, pay karo — bas itna hi karna hai.' },
   { name: 'Nikhil R.',         stars: 5, source: 'Instagram', text: '1080 UC liya, 4 min me aa gaya. PhonePe se pay kiya.' },
-  { name: 'Sameer Khan',       stars: 5, source: 'WhatsApp',  text: 'Isse fast kahin nahi mila bhai. 3 min me diamonds.' },
+  { name: 'Sameer Khan',       stars: 5, source: 'WhatsApp',  text: 'Isse fast kahin nahi mila bhai. 3 min me UC aa gaya.' },
   { name: 'Deepak Yadav',      stars: 5, source: 'YouTube',   text: 'Pehli baar doubt tha, par ID verify karke confirm kiya. Trust ban gaya.' },
   { name: 'Ritu S.',           stars: 4, source: 'Telegram',  text: '2280 UC ka price kam tha. Delivery bhi theek.' },
   { name: 'Aditya Nair',       stars: 5, source: 'Instagram', text: 'Ordered at 1am, still got the UC in 5 minutes.' },
   { name: 'Tanmay Joshi',      stars: 5, source: 'YouTube',   text: 'No login drama. Paid via UPI, UC credited in 4 mins.' },
   { name: 'Farhan A.',         stars: 4, source: 'WhatsApp',  text: 'Prices are fair, just had to wait ~15 min in the evening.' },
   { name: 'Ritika Bansal',     stars: 5, source: 'Telegram',  text: 'Third order here. Zero issues so far.' },
-  { name: 'Priya N.',          stars: 5, source: 'WhatsApp',  text: '560 diamonds 2 min me credit. Ab to yahin se lungi.' },
+  { name: 'Priya N.',          stars: 5, source: 'WhatsApp',  text: '720 UC 2 min me credit ho gaya. Ab to yahin se lungi.' },
   { name: 'Harsh Vardhan',     stars: 5, source: 'YouTube',   text: 'Payment ke baad screenshot bheja, 5 min me order done.' },
   { name: 'Aakash Dubey',      stars: 5, source: 'Telegram',  text: 'Genuine hai, do order kar chuka hoon. Koi issue nahi.' },
   { name: 'Mohit Saxena',      stars: 4, source: 'Instagram', text: 'Weekend pe thoda late hua par UC mil gaya. Price ka issue nahi.' },
@@ -203,10 +186,10 @@ function newOrderRef() {
   return 'UCB' + s;
 }
 
-/* "2560 UC" -> "2560UC", "7800 Diamond" -> "7800D" (UPI notes allow ~50 chars) */
+/* "2560 UC" -> "2560UC" (UPI notes allow ~50 chars) */
 function packLabel(pack) {
   if (!pack) return '';
-  return pack.name.replace(/\s+/g, '').replace(/Diamonds?/i, 'D');
+  return pack.name.replace(/\s+/g, '');
 }
 
 /* The note the customer's UPI app sends with the payment. It carries everything
@@ -596,8 +579,8 @@ function toast(msg, isError) {
 function init() {
   renderOrderStats();
 
-  renderGames();
-  renderPackages();
+  // sirf ek hi game hai — pehle se select rehta hai, packages turant dikhte hain
+  selectGame(Object.keys(GAMES)[0]);
   renderReviews();
   updateSummary();
 

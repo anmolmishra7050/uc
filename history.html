@@ -140,7 +140,7 @@
           </div>
         </div>
         ${status === 'Verifying'
-          ? '<p class="muted tiny">We are checking your payment — UC/Diamonds will be delivered shortly.</p>'
+          ? '<p class="muted tiny">We are checking your payment — UC will be delivered shortly.</p>'
           : status === 'Failed'
             ? `<p class="h-help">Payment could not be verified. If money was deducted, email us your payment screenshot — <a class="mail-link" href="mailto:${window.STORE.email}">${window.STORE.email}</a></p>`
             : `<p class="muted tiny">Order delivered to ID ${p.playerId}. Thank you for playing!</p>`}`;

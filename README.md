@@ -1,6 +1,6 @@
 # UC BAZZAR — Game Top-Up Store
 
-Yellow/gold themed, fully static top-up storefront (BGMI UC + Free Fire MAX Diamonds) — no build step, no backend.
+Yellow/gold themed, fully static top-up storefront (**BGMI UC only**) — no build step, no backend.
 
 ## 1. Apna payment + contact info daalein (ZAROORI)
 
@@ -14,24 +14,26 @@ window.STORE = {
   email: 'ucbazzar@gmail.com',   // ← orders + support isi email par
 
   // Homepage ka "Orders Delivered" counter — 0 se shuru hokar har ghante 7–15 badhta hai
-  orders: { base: 0, startDate: '2026-09-29', perHourMin: 7, perHourMax: 15 },
+  orders: { base: 750, startDate: '2026-10-16T11:00:00', perHourMin: 7, perHourMax: 15 },
   qrApi: 'https://api.qrserver.com/v1/create-qr-code/',
 };
 ```
 
 ## 2. Prices / packages badalna
 
-**`script.js`** ke top par `GAMES` object hai. Har game ke `packages` me `name`, `price` aur optional `tag`
-(`POPULAR`, `BEST VALUE`) edit karein. Nayi package add/remove karna bilkul safe hai.
+**`script.js`** ke top par `GAMES` object hai. Ab is site par sirf **BGMI** hai, is liye `GAMES.bgmi.packages`
+me `name`, `price` aur optional `tag` (`POPULAR`, `BEST VALUE`) edit karein. Nayi package add/remove karna
+bilkul safe hai. `GAMES` me naya game object add karna bhi kaam karta hai — game cards khud dikh jaate hain
+(pehla game pehle se select rehta hai).
 
 ## 3. "Orders Delivered" counter
 
 Homepage par jo number dikhta hai woh `config.js` ke `orders` se banta hai:
 
-- `base` — counter ka abhi ka number. Abhi **1200** hai, yaani homepage par 1,200 orders dikhte hain.
-- `startDate` — is waqt se counter badhna shuru karta hai. Sirf din (`2026-10-07`) ya din + time
-  (`2026-10-07T09:00:00`) — dono likh sakte hain. Abhi `2026-10-07T09:00:00` hai, isliye counter
-  1,200 se shuru hokar uske baad hi badhta hai.
+- `base` — counter ka abhi ka number. Abhi **750** hai, yaani homepage par 750 orders dikhte hain.
+- `startDate` — is waqt se counter badhna shuru karta hai. Sirf din (`2026-10-16`) ya din + time
+  (`2026-10-16T11:00:00`) — dono likh sakte hain. Abhi `2026-10-16T11:00:00` hai, isliye counter
+  750 se shuru hokar uske baad hi badhta hai.
 - `perHourMin` / `perHourMax` — **har ghante** kitne orders add honge (7–15).
 
 Number har ghante apne aap badhta hai aur ghante ke andar bhi halka-halka tick karta dikhta hai. Koi
@@ -65,7 +67,7 @@ Ya `index.html` ko seedha browser me khol lein (assets relative path se load hot
    **Payment History** page par chali jaati hai, screenshot-friendly order ID ke saath, aur wahan
    status **⏳ Payment Verifying** dikhta hai.
 
-> Aap UPI app me payment dekh kar UC/Diamonds deliver karte hain, phir us order ko Delivered mark karte hain.
+> Aap UPI app me payment dekh kar UC deliver karte hain, phir us order ko Delivered mark karte hain.
 
 ### Payment History ka flow
 
@@ -132,7 +134,7 @@ ki zarurat nahi. Shared hosting par files `public_html` me upload kar dein.
 
 | File | Kaam |
 |---|---|
-| `index.html` | Main store page (game select → player info → packages → order summary → payment modal → payment history) |
+| `index.html` | Main store page (BGMI game card → player info → UC packages → order summary → payment modal → payment history) |
 | `payment-history.js` | Payment records + Verifying/Failed/Delivered status engine |
 | `styles.css` | Dark + gold theme, fully responsive |
 | `config.js` | **Store settings** — UPI ID, email, orders counter |
@@ -140,7 +142,7 @@ ki zarurat nahi. Shared hosting par files `public_html` me upload kar dein.
 | `about.html` | About Us page (store story, location, working hours) — nav ka last item |
 | `faq.html`, `contact.html`, `privacy.html`, `terms.html`, `refund.html` | Support / policy pages |
 | `serve.js` | Local dev server (`node serve.js`) — deploy ke liye zaroori nahi |
-| `Assests/` | Logo, game art, UC / diamond icons, GPay / PhonePe / Paytm / UPI icons |
+| `Assests/` | Logo, BGMI art, UC icon, GPay / PhonePe / Paytm / UPI icons |
 | `.github/workflows/deploy.yml` | GitHub Pages auto-deploy (push par chalta hai) |
 
 ## 8. Google / social media par dikhne wali cheezein
@@ -175,4 +177,4 @@ footer ke Quick Links me bhi, aur baaki saare pages ke footer me bhi.
 
 ## 10. Zaroori note
 
-Hum game publisher (Krafton / Garena) ke official partner nahi hain — policy pages me yeh clearly likha hua hai.
+Hum game publisher (Krafton / BGMI) ke official partner nahi hain — policy pages me yeh clearly likha hua hai.
